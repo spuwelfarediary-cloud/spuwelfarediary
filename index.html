@@ -143,7 +143,10 @@
                 <i data-lucide="menu" class="w-6 h-6"></i>
             </button>
             <div id="topBar" class="flex flex-col sm:flex-row gap-3 mb-4">
-                <input id="search" class="flex-grow p-3 rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Search applicant, subject, or office..." aria-label="Search entries" />
+                <div class="relative flex-grow">
+                    <input id="search" class="w-full p-3 rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Search name, belt no, subject..." aria-label="Search entries" />
+                    <div id="searchDropdown" class="absolute z-50 w-full bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg shadow-lg max-h-96 overflow-y-auto hidden"></div>
+                </div>
                 <div class="flex gap-2">
                     <button id="exportTabXlsx" class="flex items-center gap-1 px-4 py-2 rounded-lg bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600 transition-all" aria-label="Export current tab to Excel">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export Tab (XLS)
@@ -161,6 +164,7 @@ const SECTIONS = [
     { id:'medical', title:'Medical Financial Assistance', key:'welfare_medical', icon:'badge-dollar', fields:[
         {k:'dateReceived',label:'Date Received',type:'date'},
         {k:'applicantName',label:'Applicant Name',type:'text'},
+        {k:'beltNo',label:'Belt No',type:'text'},
         {k:'subject',label:'Subject',type:'text'},
         {k:'fromOffice',label:'From Office',type:'text'},
         {k:'claimAmount',label:'Claim Amount',type:'number'},
@@ -176,6 +180,7 @@ const SECTIONS = [
     { id:'misc', title:'Misc Letter', key:'welfare_misc', icon:'mail', fields:[
         {k:'dateReceived',label:'Date Received',type:'date'},
         {k:'applicantName',label:'Applicant Name',type:'text'},
+        {k:'beltNo',label:'Belt No',type:'text'},
         {k:'subject',label:'Subject',type:'text'},
         {k:'fromOffice',label:'From Office',type:'text'},
         {k:'missing1',label:'Missing Docs Letter 1st',type:'date', optional: true},
@@ -190,6 +195,7 @@ const SECTIONS = [
     { id:'wedding', title:'Wedding Gift', key:'welfare_wedding', icon:'gift', fields:[
         {k:'dateReceived',label:'Date Received',type:'date'},
         {k:'applicantName',label:'Applicant Name',type:'text'},
+        {k:'beltNo',label:'Belt No',type:'text'},
         {k:'subject',label:'Subject',type:'text'},
         {k:'brideName',label:'Bride Name',type:'text'},
         {k:'amount',label:'Amount',type:'number'},
@@ -205,6 +211,7 @@ const SECTIONS = [
     { id:'scholarship', title:'Scholarship', key:'welfare_scholarship', icon:'graduation-cap', fields:[
         {k:'dateReceived',label:'Date Received',type:'date'},
         {k:'applicantName',label:'Applicant Name',type:'text'},
+        {k:'beltNo',label:'Belt No',type:'text'},
         {k:'subject',label:'Subject',type:'text'},
         {k:'studentName',label:'Student Name',type:'text'},
         {k:'amount',label:'Amount',type:'number'},
@@ -220,6 +227,7 @@ const SECTIONS = [
     { id:'basicpay', title:'Last Month Basic Pay', key:'welfare_basicpay', icon:'wallet', fields:[
         {k:'dateReceived',label:'Date Received',type:'date'},
         {k:'applicantName',label:'Applicant Name',type:'text'},
+        {k:'beltNo',label:'Belt No',type:'text'},
         {k:'subject',label:'Subject',type:'text'},
         {k:'fromOffice',label:'From Office',type:'text'},
         {k:'amount',label:'Amount',type:'number'},
@@ -232,6 +240,7 @@ const SECTIONS = [
         { id:'wmc_medical', title:'Medical Financial Assistance', key:'welfare_wmc_medical', icon:'badge-dollar', fields:[
             {k:'dateReceived',label:'Date Received',type:'date'},
             {k:'applicantName',label:'Applicant Name',type:'text'},
+            {k:'beltNo',label:'Belt No',type:'text'},
             {k:'subject',label:'Subject',type:'text'},
             {k:'fromOffice',label:'From Office',type:'text'},
             {k:'claimAmount',label:'Claim Amount',type:'number'},
@@ -242,6 +251,7 @@ const SECTIONS = [
         { id:'wmc_financial', title:'Financial Assistance', key:'welfare_wmc_financial', icon:'wallet', fields:[
             {k:'dateReceived',label:'Date Received',type:'date'},
             {k:'applicantName',label:'Applicant Name',type:'text'},
+            {k:'beltNo',label:'Belt No',type:'text'},
             {k:'subject',label:'Subject',type:'text'},
             {k:'fromOffice',label:'From Office',type:'text'},
             {k:'claimAmount',label:'Claim Amount',type:'number'},
@@ -252,6 +262,7 @@ const SECTIONS = [
         { id:'wmc_other', title:'Other', key:'welfare_wmc_other', icon:'file-text', fields:[
             {k:'dateReceived',label:'Date Received',type:'date'},
             {k:'applicantName',label:'Applicant Name',type:'text'},
+            {k:'beltNo',label:'Belt No',type:'text'},
             {k:'subject',label:'Subject',type:'text'},
             {k:'fromOffice',label:'From Office',type:'text'},
             {k:'claimAmount',label:'Claim Amount',type:'number'},
@@ -271,8 +282,7 @@ const SECTIONS = [
     { id:'settings', title:'Settings', icon: 'settings'}
 ];
 
-const STORAGE_ROOT = 'welfare_multi_v3';
-const AUTH_STORAGE = 'welfare_auth';
+const AUTH_DOC = 'auth/default';
 let state = {}, activeId = 'dashboard', subActiveId = null, filterStatus = null, selectedIndex = null;
 let currentTheme = 'dark';
 let currentFontSize = localStorage.getItem('fontSize') || 'text-base';
@@ -286,6 +296,7 @@ const menuEl = document.getElementById('menu');
 const contentArea = document.getElementById('contentArea');
 const topBar = document.getElementById('topBar');
 const searchInput = document.getElementById('search');
+const searchDropdown = document.getElementById('searchDropdown');
 const loginPage = document.getElementById('loginPage');
 const appContent = document.getElementById('appContent');
 const loginForm = document.getElementById('loginForm');
@@ -321,7 +332,7 @@ function todayISO() {
 
 async function loadState() {
     try {
-        const docRef = doc(collection(db, 'app_states'), 'default');
+        const docRef = doc(db, 'app_states', 'default');
         const snap = await getDoc(docRef);
         if (snap.exists()) {
             state = snap.data();
@@ -329,7 +340,7 @@ async function loadState() {
             state = {};
         }
     } catch (e) {
-        console.error(e);
+        console.error('Firestore load error:', e);
         state = {};
     }
     SECTIONS.forEach(sec => {
@@ -344,20 +355,31 @@ async function loadState() {
     applyFontSize(currentFontSize);
 }
 
-function saveState() {
+async function saveState() {
     try {
-        const docRef = doc(collection(db, 'app_states'), 'default');
-        setDoc(docRef, state);
+        const docRef = doc(db, 'app_states', 'default');
+        await setDoc(docRef, state);
     } catch (e) {
-        console.error(e);
+        console.error('Firestore save error:', e);
     }
 }
 
 /* ---------- Login & Logout Logic ---------- */
 async function initAuth() {
     const defaultCredentials = { username: 'admin', password: 'welfare123' };
-    if (!localStorage.getItem(AUTH_STORAGE)) {
-        localStorage.setItem(AUTH_STORAGE, JSON.stringify(defaultCredentials));
+    let stored;
+    try {
+        const authRef = doc(db, 'auth', 'default');
+        const authSnap = await getDoc(authRef);
+        if (authSnap.exists()) {
+            stored = authSnap.data();
+        } else {
+            await setDoc(authRef, defaultCredentials);
+            stored = defaultCredentials;
+        }
+    } catch (e) {
+        console.error('Auth load error:', e);
+        stored = defaultCredentials;
     }
 
     if (sessionStorage.getItem('welfare_logged_in') === 'true') {
@@ -376,7 +398,6 @@ async function initAuth() {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        const stored = JSON.parse(localStorage.getItem(AUTH_STORAGE));
 
         if (username === stored.username && password === stored.password) {
             sessionStorage.setItem('welfare_logged_in', 'true');
@@ -901,7 +922,7 @@ function renderSection(sec) {
             wrap.appendChild(inp);
             form.insertBefore(wrap, form.lastElementChild);
         });
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const rec = {};
             let isValid = true;
@@ -921,7 +942,7 @@ function renderSection(sec) {
             if (!isValid) return;
             const arr = state[sec.key];
             if (selectedIndex === null) arr.push(rec); else arr[selectedIndex] = rec;
-            saveState();
+            await saveState();
             renderSection(sec);
             showModal('Entry Saved', selectedIndex === null ? 'New record added.' : 'Record updated.', {
                 actions: [{ text: 'OK', value: true, style: 'bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700' }]
@@ -975,18 +996,18 @@ function renderSection(sec) {
                     { text: 'Cancel', value: false, style: 'bg-gray-600 text-[var(--text-primary)] px-4 py-2 rounded-lg hover:bg-gray-500' },
                     { text: 'Delete', value: true, style: 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500' }
                 ]
-            }).then(result => {
+            }).then(async result => {
                 if (result) {
                     state[sec.key].splice(idx, 1);
-                    saveState();
+                    await saveState();
                     renderSection(sec);
                 }
             });
             return;
         }
-        if (act === 'rem1' && rec.reminder1 === undefined) { rec.reminder1 = todayISO(); saveState(); renderTable(sec, displayHeaders, hasStatus); return; }
-        if (act === 'docs' && rec.documentsReceived === undefined) { rec.documentsReceived = todayISO(); saveState(); renderTable(sec, displayHeaders, hasStatus); return; }
-        if (act === 'sent' && rec.status !== 'Sent') { rec.status = 'Sent'; saveState(); renderTable(sec, displayHeaders, hasStatus); return; }
+        if (act === 'rem1' && rec.reminder1 === undefined) { rec.reminder1 = todayISO(); await saveState(); renderTable(sec, displayHeaders, hasStatus); return; }
+        if (act === 'docs' && rec.documentsReceived === undefined) { rec.documentsReceived = todayISO(); await saveState(); renderTable(sec, displayHeaders, hasStatus); return; }
+        if (act === 'sent' && rec.status !== 'Sent') { rec.status = 'Sent'; await saveState(); renderTable(sec, displayHeaders, hasStatus); return; }
     });
     function fillForm(rec, sec) {
         sec.fields.forEach(f => {
@@ -1002,17 +1023,18 @@ function renderTable(sec, displayHeaders, hasStatus) {
     const fragment = document.createDocumentFragment();
     const arr = state[sec.key] || [];
     const q = searchInput.value.trim().toLowerCase();
+    const words = q.split(/\s+/).filter(w => w);
     arr.forEach((row, idx) => {
         let hay = '';
         sec.fields.forEach(f => { hay += (row[f.k] || '') + ' '; });
         hay = hay.toLowerCase();
-        if (q && !hay.includes(q)) return;
-        let showRow = true;
+        const match = words.length === 0 || words.some(word => hay.includes(word));
+        let showRow = match;
         if (filterStatus && hasStatus) {
             if (filterStatus === 'Rejected') {
-                showRow = row.status === 'Rejected' || row.status === 'Objection';
+                showRow = showRow && (row.status === 'Rejected' || row.status === 'Objection');
             } else {
-                showRow = row.status === filterStatus;
+                showRow = showRow && (row.status === filterStatus);
             }
         }
         if (!showRow) return;
@@ -1279,14 +1301,14 @@ function handleClearAll() {
             { text: 'Cancel', value: false, style: 'bg-gray-600 text-[var(--text-primary)] px-4 py-2 rounded-lg hover:bg-gray-500' },
             { text: 'Yes, Clear All', value: true, style: 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500' }
         ]
-    }).then(result => {
+    }).then(async result => {
         if (result) {
             state = {};
             SECTIONS.forEach(sec => {
                 if (sec.key) state[sec.key] = [];
                 if (sec.subSections) sec.subSections.forEach(sub => state[sub.key] = []);
             });
-            saveState();
+            await saveState();
             buildMenu();
             renderContent();
             showModal('Data Cleared', 'All data deleted.', {
@@ -1296,11 +1318,60 @@ function handleClearAll() {
     });
 }
 
+/* ---------- Global Search ---------- */
+function renderGlobalSearchResults(q) {
+    searchDropdown.innerHTML = '';
+    if (!q) {
+        searchDropdown.classList.add('hidden');
+        return;
+    }
+    const words = q.split(/\s+/).filter(w => w).map(w => w.toLowerCase());
+    const allSecs = getAllSectionsWithKey();
+    const results = [];
+    allSecs.forEach(sec => {
+        const arr = state[sec.key] || [];
+        arr.forEach((row, idx) => {
+            const hay = [(row.applicantName || ''), (row.beltNo || ''), (row.subject || '')].join(' ').toLowerCase();
+            if (words.some(word => hay.includes(word))) {
+                results.push({ sec, row, idx });
+            }
+        });
+    });
+    if (results.length === 0) {
+        searchDropdown.innerHTML = '<p class="p-2 text-[var(--text-secondary)]">No results found</p>';
+    } else {
+        results.forEach(res => {
+            const btn = document.createElement('button');
+            btn.className = 'w-full text-left p-2 hover:bg-[var(--hover-bg)] border-b border-[var(--border-color)] last:border-0';
+            btn.innerHTML = `
+                <div class="text-sm font-medium text-[var(--text-primary)]">Name: ${res.row.applicantName || '-'}, Belt No: ${res.row.beltNo || '-'}, Subject: ${res.row.subject || '-'}</div>
+                <div class="text-xs text-[var(--text-secondary)]">In ${res.sec.title}</div>
+            `;
+            btn.addEventListener('click', () => {
+                if (res.sec.id.startsWith('wmc_')) {
+                    activeId = 'wmc';
+                    subActiveId = res.sec.id;
+                } else {
+                    activeId = res.sec.id;
+                    subActiveId = null;
+                }
+                filterStatus = null;
+                searchDropdown.classList.add('hidden');
+                buildMenu();
+                renderContent();
+            });
+            searchDropdown.appendChild(btn);
+        });
+    }
+    searchDropdown.classList.remove('hidden');
+}
+
 /* ---------- Initialization ---------- */
 window.onload = async function() {
-    searchInput.addEventListener('input', debounce(() => {
+    searchInput.addEventListener('input', debounce(async () => {
+        const q = searchInput.value.trim();
         const sec = getCurrentSec();
-        if (sec) {
+        if (sec && sec.key) {
             const allFields = sec.fields;
             const hasStatus = allFields.some(f => f.k === 'status');
             const fieldLabels = {};
@@ -1311,10 +1382,17 @@ window.onload = async function() {
                 label: k === 'sr' ? 'Sr#' : (k === 'actions' ? 'Actions' : fieldLabels[k] || k.charAt(0).toUpperCase() + k.slice(1))
             }));
             renderTable(sec, displayHeaders, hasStatus);
+        } else {
+            renderGlobalSearchResults(q);
         }
     }, 300));
     menuToggleEl.addEventListener('click', toggleMenu);
     window.addEventListener('resize', applyLayout);
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+            searchDropdown.classList.add('hidden');
+        }
+    });
     await initAuth();
 };
 </script>
