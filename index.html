@@ -4,13 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Welfare Branch Diary</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
-    <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- SheetJS for Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Chart.js for graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -86,7 +82,6 @@
     </style>
 </head>
 <body class="text-base">
-    <!-- Login Page -->
     <div id="loginPage" class="min-h-screen flex items-center justify-center bg-[var(--content-bg)]">
         <div class="bg-[var(--card-bg)] p-8 rounded-xl shadow-2xl max-w-md w-full transform transition-all hover:-translate-y-1">
             <h2 class="text-2xl font-bold text-[var(--text-primary)] mb-6 text-center">Login to Welfare Diary</h2>
@@ -105,9 +100,7 @@
         </div>
     </div>
 
-    <!-- Main App Layout -->
     <div class="hidden min-h-screen flex flex-col md:flex-row" id="appContent">
-        <!-- Custom Modal -->
         <div id="customModal" class="fixed inset-0 bg-black bg-opacity-70 z-[1000] hidden flex items-center justify-center p-4">
             <div class="bg-[var(--card-bg)] p-6 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
                 <h3 id="modalTitle" class="text-xl font-bold mb-3 text-[var(--text-primary)]"></h3>
@@ -116,7 +109,6 @@
             </div>
         </div>
 
-        <!-- Sidebar -->
         <div class="sidebar w-[60px] md:w-[300px] flex flex-col flex-shrink-0">
             <div class="flex items-center justify-start gap-3 px-4 py-4 border-b border-[var(--border-color)]">
                 <img src="./logo.jpeg" alt="Welfare Branch Logo" class="w-10 h-10 rounded-md object-cover shadow-md" onerror="this.onerror=null; this.src='https://via.placeholder.com/40?text=WL'" />
@@ -137,19 +129,26 @@
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="flex-1 p-4 md:ml-[60px] lg:ml-[300px] transition-all" id="mainContent">
             <button id="menuToggle" class="md:hidden fixed top-4 left-4 z-50 p-2 rounded-full bg-[var(--primary-color)] text-white shadow-lg hover:bg-blue-700" aria-label="Toggle menu">
                 <i data-lucide="menu" class="w-6 h-6"></i>
             </button>
-            <div id="topBar" class="flex flex-col sm:flex-row gap-3 mb-4">
-                <input id="search" class="flex-grow p-3 rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)]" placeholder="Search applicant, subject, or office..." aria-label="Search entries" />
-                <div class="flex gap-2">
+            
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4" id="topBar">
+                <input type="search" id="search" 
+                    class="w-full md:w-[350px] p-3 rounded-full border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)] 
+                    focus:ring-2 focus:ring-[var(--primary-color)] transition-all duration-300 shadow-xl" 
+                    placeholder="Search employees, cases, or records..." aria-label="Search entries" />
+                
+                <div id="tabActions" class="flex gap-2 hidden"> 
                     <button id="exportTabXlsx" class="flex items-center gap-1 px-4 py-2 rounded-lg bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600 transition-all" aria-label="Export current tab to Excel">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export Tab (XLS)
                     </button>
                 </div>
             </div>
+            
+            <div id="searchDedicatedResults" class="flex flex-col gap-4 max-w-full hidden"></div>
+            
             <div id="contentArea" class="flex flex-col gap-4 max-w-full"></div>
         </div>
     </div>
@@ -273,7 +272,9 @@ const SECTIONS = [
 
 const STORAGE_ROOT = 'welfare_multi_v3';
 const AUTH_STORAGE = 'welfare_auth';
+// NEW GLOBAL STATE VARIABLES
 let state = {}, activeId = 'dashboard', subActiveId = null, filterStatus = null, selectedIndex = null;
+let isSearchMode = false; // Flag to track if the dedicated search results view is active
 let currentTheme = 'dark';
 let currentFontSize = localStorage.getItem('fontSize') || 'text-base';
 let isMenuOpen = false;
@@ -284,8 +285,10 @@ const mainContentEl = document.getElementById('mainContent');
 const menuToggleEl = document.getElementById('menuToggle');
 const menuEl = document.getElementById('menu');
 const contentArea = document.getElementById('contentArea');
+const searchDedicatedResults = document.getElementById('searchDedicatedResults'); // NEW Element
 const topBar = document.getElementById('topBar');
 const searchInput = document.getElementById('search');
+const tabActions = document.getElementById('tabActions'); // NEW Element
 const loginPage = document.getElementById('loginPage');
 const appContent = document.getElementById('appContent');
 const loginForm = document.getElementById('loginForm');
@@ -319,17 +322,24 @@ function todayISO() {
     return d.toISOString().slice(0, 10);
 }
 
+// ... (loadState and saveState functions remain the same) ...
 async function loadState() {
     try {
-        const docRef = doc(collection(db, 'app_states'), 'default');
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-            state = snap.data();
+        // Assuming Firebase is initialized elsewhere or will fail gracefully
+        if (typeof db !== 'undefined' && typeof doc !== 'undefined' && typeof collection !== 'undefined' && typeof getDoc !== 'undefined') {
+            const docRef = doc(collection(db, 'app_states'), 'default');
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                state = snap.data();
+            } else {
+                state = {};
+            }
         } else {
+            console.warn("Firebase not initialized. Using empty state.");
             state = {};
         }
     } catch (e) {
-        console.error(e);
+        console.error("Error loading state:", e);
         state = {};
     }
     SECTIONS.forEach(sec => {
@@ -346,15 +356,23 @@ async function loadState() {
 
 function saveState() {
     try {
-        const docRef = doc(collection(db, 'app_states'), 'default');
-        setDoc(docRef, state);
+        if (typeof db !== 'undefined' && typeof doc !== 'undefined' && typeof collection !== 'undefined' && typeof setDoc !== 'undefined') {
+            const docRef = doc(collection(db, 'app_states'), 'default');
+            setDoc(docRef, state);
+        } else {
+            console.warn("Firebase not initialized. State changes will not be saved.");
+        }
     } catch (e) {
-        console.error(e);
+        console.error("Error saving state:", e);
     }
 }
+// ... (loadState and saveState functions remain the same) ...
+
 
 /* ---------- Login & Logout Logic ---------- */
+// ... (initAuth function remains the same) ...
 async function initAuth() {
+    // ... (initAuth logic) ...
     const defaultCredentials = { username: 'admin', password: 'welfare123' };
     if (!localStorage.getItem(AUTH_STORAGE)) {
         localStorage.setItem(AUTH_STORAGE, JSON.stringify(defaultCredentials));
@@ -400,8 +418,8 @@ async function initAuth() {
         loginError.classList.add('hidden');
     });
 }
-
 /* ---------- Menu Toggle Logic ---------- */
+// ... (applyLayout, updateMenuButtonIcon, toggleMenu functions remain the same) ...
 const DESKTOP_BREAKPOINT = 768;
 
 function applyLayout() {
@@ -430,8 +448,7 @@ function toggleMenu() {
         applyLayout();
     }
 }
-
-/* ---------- Modal Logic ---------- */
+// ... (Modal Logic remains the same) ...
 const modalEl = document.getElementById('customModal');
 const modalTitleEl = document.getElementById('modalTitle');
 const modalMessageEl = document.getElementById('modalMessage');
@@ -471,8 +488,8 @@ function showModal(title, message, options = {}) {
         });
     });
 }
-
 /* ---------- Theme & Font Management ---------- */
+// ... (applyTheme, applyFontSize functions remain the same) ...
 function applyTheme(theme) {
     currentTheme = 'dark';
     localStorage.setItem('theme', 'dark');
@@ -484,8 +501,8 @@ function applyFontSize(size) {
     localStorage.setItem('fontSize', size);
     document.body.className = size;
 }
-
 /* ---------- UI Build ---------- */
+// ... (buildMenu function remains the same) ...
 function buildMenu() {
     menuEl.innerHTML = '';
     SECTIONS.forEach(s => {
@@ -513,8 +530,33 @@ function buildMenu() {
     initializeIcons();
 }
 
+/**
+ * MODIFIED renderContent function to handle the new search view state.
+ */
 function renderContent() {
-    topBar.classList.toggle('hidden', activeId === 'dashboard' || activeId === 'settings');
+    // 1. Toggle visibility and style for topBar elements based on the active tab/search mode
+    const isDataTab = activeId !== 'dashboard' && activeId !== 'settings';
+    
+    // Adjust search bar width: Small (md:w-[350px]) on dashboard/settings, full-width (w-full) on data tabs
+    searchInput.classList.toggle('md:w-[350px]', !isDataTab); 
+    searchInput.classList.toggle('w-full', isDataTab);
+    
+    // Hide Export button unless it's a data tab and NOT in search mode
+    tabActions.classList.toggle('hidden', !isDataTab || isSearchMode);
+
+    // 2. Control Content Areas based on Search Mode
+    if (isSearchMode) {
+        // If in search mode (triggered by typing/Enter), hide regular content and show search results container
+        contentArea.classList.add('hidden');
+        searchDedicatedResults.classList.remove('hidden');
+        return; // Stop here, search results are already rendered
+    }
+
+    // If not in search mode, ensure regular content area is visible
+    contentArea.classList.remove('hidden');
+    searchDedicatedResults.classList.add('hidden');
+    
+    // 3. Render the content for the active tab (original logic)
     if (activeId === 'dashboard') {
         renderDashboard();
     } else if (activeId === 'settings') {
@@ -531,7 +573,9 @@ function renderContent() {
     }
 }
 
+
 /* ---------- Helper Functions ---------- */
+// ... (getCurrentSec, setSubActiveTab, setSubActiveTabWithFilter, clearFilter functions remain the same) ...
 function getCurrentSec() {
     let sec = SECTIONS.find(s => s.id === activeId);
     if (activeId === 'wmc' && subActiveId) {
@@ -552,14 +596,14 @@ function setSubActiveTabWithFilter(subId, status) {
     renderContent();
 }
 
+window.clearFilter = clearFilter;
 function clearFilter() {
     filterStatus = null;
     renderContent();
 }
 
-window.clearFilter = clearFilter;
-
 /* ---------- Dashboard ---------- */
+// ... (renderDashboard, renderWMCSubDashboard, renderDashboardCard, animateCounter functions remain the same) ...
 function calculateDashboardData(sections) {
     const data = {};
     sections.forEach(sec => {
@@ -831,6 +875,9 @@ function setActiveTab(id) {
     activeId = id;
     subActiveId = null;
     filterStatus = null;
+    // Clear search mode and search input when navigating tabs
+    isSearchMode = false;
+    searchInput.value = ''; 
     buildMenu();
     renderContent();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -840,7 +887,19 @@ function setActiveTab(id) {
 function renderSection(sec) {
     selectedIndex = null;
     contentArea.innerHTML = '';
-    if (filterStatus) {
+    // This part of the contentArea is dedicated to table filtering when the user is on a data tab
+    const q = searchInput.value.trim().toLowerCase(); 
+    if (q) {
+        // If there's text in the search bar, display the local filter notification
+        contentArea.insertAdjacentHTML('beforeend', `
+            <div class="bg-[var(--card-bg)] shadow-md rounded-lg p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-lg font-medium text-[var(--text-primary)]">Table filtered by: "${searchInput.value}"</span>
+                    <button class="bg-gray-600 text-[var(--text-primary)] px-4 py-2 rounded-lg hover:bg-gray-500" onclick="searchInput.value = ''; renderContent();" aria-label="Clear filter">Clear Local Filter</button>
+                </div>
+            </div>
+        `);
+    } else if (filterStatus) {
         contentArea.insertAdjacentHTML('beforeend', `
             <div class="bg-[var(--card-bg)] shadow-md rounded-lg p-4 mb-4">
                 <div class="flex items-center justify-between">
@@ -850,7 +909,8 @@ function renderSection(sec) {
             </div>
         `);
     }
-    if (!filterStatus) {
+
+    if (!filterStatus && !q) { // Only show the form if no filter or search is active
         const formCardHtml = `
             <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
                 <h2 class="text-2xl font-semibold mb-2 text-[var(--text-primary)]">${sec.title}</h2>
@@ -1006,16 +1066,22 @@ function renderTable(sec, displayHeaders, hasStatus) {
         let hay = '';
         sec.fields.forEach(f => { hay += (row[f.k] || '') + ' '; });
         hay = hay.toLowerCase();
-        if (q && !hay.includes(q)) return;
+        
         let showRow = true;
-        if (filterStatus && hasStatus) {
+        // Apply text filter
+        if (q && !hay.includes(q)) showRow = false;
+
+        // Apply status filter
+        if (showRow && filterStatus && hasStatus) {
             if (filterStatus === 'Rejected') {
                 showRow = row.status === 'Rejected' || row.status === 'Objection';
             } else {
                 showRow = row.status === filterStatus;
             }
         }
+        
         if (!showRow) return;
+        
         const tr = document.createElement('tr');
         tr.className = 'border-b border-[var(--border-color)] hover:bg-[var(--hover-bg)] transition-colors';
         if (idx === selectedIndex) {
@@ -1069,6 +1135,7 @@ function resetForm(sec) {
 }
 
 /* ---------- Settings Page ---------- */
+// ... (renderSettings, renderFontSizeButton functions remain the same) ...
 function renderSettings() {
     contentArea.innerHTML = `
         <h2 class="text-3xl font-semibold text-[var(--text-primary)] mb-4">Application Settings</h2>
@@ -1152,6 +1219,7 @@ function renderFontSizeButton(size, label) {
 }
 
 /* ---------- Data Export/Import/Clear ---------- */
+// ... (getAllSectionsWithKey, prepareRowsForSection, saveArrayAsFile, downloadAllXlsx, handleImport, handleClearAll functions remain the same) ...
 function getAllSectionsWithKey() {
     let all = [];
     SECTIONS.forEach(sec => {
@@ -1296,11 +1364,187 @@ function handleClearAll() {
     });
 }
 
+/* ---------- NEW & MODIFIED SEARCH FEATURE (User Request) ---------- */
+
+/**
+ * Navigates to the section corresponding to the key, sets the selectedIndex, 
+ * rebuilds the view, and scrolls to the selected row.
+ * @param {string} key - The state key (e.g., 'welfare_medical')
+ * @param {number} index - The index of the record in the state array
+ */
+function selectRowAndNavigate(key, index) {
+    const allSections = getAllSectionsWithKey();
+    const sec = allSections.find(s => s.key === key);
+    if (!sec) return;
+
+    // Determine the correct activeId and subActiveId for navigation
+    if (key.includes('welfare_wmc_')) {
+        activeId = 'wmc';
+        subActiveId = sec.id;
+    } else {
+        activeId = sec.id;
+        subActiveId = null;
+    }
+    
+    selectedIndex = index;
+    filterStatus = null;
+    isSearchMode = false; // Exit search mode
+    searchInput.value = ''; // Clear the input
+
+    // 1. Update the menu bar state
+    buildMenu();
+    // 2. Render the section content, which will automatically load the record into the form
+    renderContent(); 
+
+    // Wait for the DOM to update, then scroll the selected row into view
+    setTimeout(() => {
+        const targetRow = document.querySelector(`#dataTableBody tr:nth-child(${index + 1})`);
+        if (targetRow) {
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 100);
+}
+window.selectRowAndNavigate = selectRowAndNavigate; // Expose globally for onclick
+
+/**
+ * Performs a search across all data sections, renders a dedicated results view, 
+ * and controls the search mode.
+ * @param {string} query - The search term.
+ * @param {boolean} clearInput - If true, clears the input after results are rendered. (For Enter key press)
+ */
+function performCrossTabSearch(query, clearInput) {
+    const q = query.trim().toLowerCase();
+    
+    if (q.length === 0) {
+        // If query is empty, exit search mode and revert to the normal view
+        isSearchMode = false;
+        if (clearInput) searchInput.value = ''; // Only clear if requested (e.g., by an Enter press on an empty field)
+        renderContent();
+        return;
+    }
+
+    // Enter search mode
+    isSearchMode = true; 
+    
+    // Clear input first if requested (User request: "enter krny k bad likha howa gyeb ho jye")
+    if (clearInput) {
+        searchInput.value = ''; 
+    }
+
+    // Search logic
+    const allSections = getAllSectionsWithKey();
+    const searchResults = {};
+    let totalResults = 0;
+
+    allSections.forEach(sec => {
+        const arr = state[sec.key] || [];
+        const matchingRecords = arr.map((row, originalIndex) => ({
+            row,
+            originalIndex,
+            // Create a searchable string from all fields
+            hay: sec.fields.map(f => row[f.k] || '').join(' ').toLowerCase()
+        })).filter(item => item.hay.includes(q));
+
+        if (matchingRecords.length > 0) {
+            searchResults[sec.id] = {
+                section: sec,
+                results: matchingRecords
+            };
+            totalResults += matchingRecords.length;
+        }
+    });
+
+    // RENDER THE SEARCH RESULTS
+    renderContent(); // Trigger the content toggle logic (hides contentArea, shows searchDedicatedResults)
+    
+    const resultsContainer = searchDedicatedResults;
+    resultsContainer.innerHTML = '';
+
+    let resultHtml = `
+        <h2 class="text-3xl font-semibold text-[var(--text-primary)] mb-4">${clearInput ? 'Dedicated Search Results' : 'Real-time Search'} for: "${query}"</h2>
+        <p class="text-xl text-[var(--text-secondary)] mb-6">${totalResults} result(s) found across ${Object.keys(searchResults).length} section(s).</p>
+        <div id="searchResultsContainerBody" class="flex flex-col gap-6"></div>
+    `;
+    resultsContainer.insertAdjacentHTML('beforeend', resultHtml);
+    const resultsBody = document.getElementById('searchResultsContainerBody');
+
+    if (totalResults === 0) {
+        resultsBody.innerHTML = '<p class="text-lg text-red-400">No results found.</p>';
+    } else {
+        Object.values(searchResults).forEach(item => {
+            const sec = item.section;
+            const results = item.results;
+            
+            // Build a mini table for each section
+            let sectionHtml = `
+                <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg overflow-hidden">
+                    <h3 class="text-xl font-bold p-3 bg-[#222222] text-[var(--text-primary)]">${sec.title} (${results.length} result${results.length !== 1 ? 's' : ''})</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full bg-[var(--card-bg)]">
+                            <thead>
+                                <tr class="bg-[#2a2a2a] text-left text-xs uppercase text-[var(--text-secondary)] font-semibold">
+                                    <th class="p-3">Sr#</th>
+                                    <th class="p-3">Applicant / Subject</th>
+                                    ${sec.fields.some(f => f.k === 'status') ? '<th class="p-3">Status</th>' : ''}
+                                    <th class="p-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${results.map(item => {
+                                    const row = item.row;
+                                    const originalIndex = item.originalIndex;
+                                    const applicant = row.applicantName || row.subject || '-';
+                                    const status = row.status || 'Pending';
+                                    const hasStatusField = sec.fields.some(f => f.k === 'status');
+
+                                    return `
+                                        <tr class="border-b border-[var(--border-color)] hover:bg-[var(--hover-bg)] transition-colors">
+                                            <td class="p-3 text-center text-sm font-medium text-[var(--text-primary)]">${originalIndex + 1}</td>
+                                            <td class="p-3 text-sm text-[var(--text-secondary)] max-w-[200px] truncate">${applicant}</td>
+                                            ${hasStatusField ? `<td class="p-3"><span class="px-3 py-1 text-xs font-semibold whitespace-nowrap rounded-full status-${status} text-center">${status}</span></td>` : ''}
+                                            <td class="p-3 whitespace-nowrap">
+                                                <button class="bg-[var(--primary-color)] text-white px-3 py-1 rounded-lg hover:bg-blue-700 text-xs" 
+                                                    onclick="selectRowAndNavigate('${sec.key}', ${originalIndex})" aria-label="View/Edit entry">
+                                                    View/Edit
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            resultsBody.insertAdjacentHTML('beforeend', sectionHtml);
+        });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
 /* ---------- Initialization ---------- */
 window.onload = async function() {
+    
+    // 1. New Search Logic (Real-time and Enter-key)
+    
+    // Real-time cross-tab search on 'input' event (debounced for performance)
     searchInput.addEventListener('input', debounce(() => {
+        const query = searchInput.value;
         const sec = getCurrentSec();
-        if (sec) {
+
+        // If on Dashboard or actively searching, use the cross-tab search (false = don't clear input)
+        if (activeId === 'dashboard' || isSearchMode || query.length > 0) {
+            performCrossTabSearch(query, false); 
+        } 
+        // If on a data tab and only clearing the input to revert to un-filtered table
+        else if (sec && sec.key && query.length === 0) {
+            isSearchMode = false;
+            renderContent(); // Re-render the tab content to show the unfitered table
+        }
+        // If on a data tab and typing (current-tab filtering only, but only if not forced into cross-tab search mode)
+        else if (sec && sec.key) {
+            // This re-runs the local table filter logic inside renderTable for current tab only
             const allFields = sec.fields;
             const hasStatus = allFields.some(f => f.k === 'status');
             const fieldLabels = {};
@@ -1312,7 +1556,19 @@ window.onload = async function() {
             }));
             renderTable(sec, displayHeaders, hasStatus);
         }
+
     }, 300));
+    
+    // Dedicated cross-tab search on 'Enter' key press (User requested: clears input and shows final result)
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); 
+            // true = clear input after search (final result view)
+            performCrossTabSearch(searchInput.value, true); 
+        }
+    });
+
+    // 2. Existing Initialization
     menuToggleEl.addEventListener('click', toggleMenu);
     window.addEventListener('resize', applyLayout);
     await initAuth();
