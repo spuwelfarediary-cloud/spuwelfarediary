@@ -1,22 +1,19 @@
 name: Deploy to Firebase Hosting
-
 on:
   push:
     branches:
-      - main  # ya jis branch se deploy karna hai
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Checkout repo
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # 2️⃣ Deploy to Firebase Hosting
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_SPUDIARY }}"
-          projectId: "spuwelfarediary"
-          channelId: live
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseToken: ${{ secrets.FIREBASE_TOKEN }}
+          projectId: spuwelfarediary
