@@ -1,0 +1,77 @@
+[debug] [2025-10-29T11:20:29.620Z] ----------------------------------------------------------------------
+[debug] [2025-10-29T11:20:29.622Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Welfare Branch\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init hosting:github
+[debug] [2025-10-29T11:20:29.622Z] CLI Version:   14.22.0
+[debug] [2025-10-29T11:20:29.622Z] Platform:      win32
+[debug] [2025-10-29T11:20:29.622Z] Node Version:  v25.1.0
+[debug] [2025-10-29T11:20:29.622Z] Time:          Wed Oct 29 2025 16:20:29 GMT+0500 (Pakistan Standard Time)
+[debug] [2025-10-29T11:20:29.622Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  C:\Users\Welfare Branch\Desktop\spuwelfarediary
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[debug] [2025-10-29T11:20:36.464Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-29T11:20:36.464Z] > authorizing via signed-in user (jcwelfare56@gmail.com)
+[debug] [2025-10-29T11:20:36.465Z] Checked if tokens are valid: true, expires at: 1761739547236
+[debug] [2025-10-29T11:20:36.465Z] Checked if tokens are valid: true, expires at: 1761739547236
+[debug] [2025-10-29T11:20:36.466Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/spuwelfarediary [none]
+[debug] [2025-10-29T11:20:37.280Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/spuwelfarediary 200
+[debug] [2025-10-29T11:20:37.280Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/spuwelfarediary {"projectId":"spuwelfarediary","projectNumber":"976541344867","displayName":"spuwelfarediary","name":"projects/spuwelfarediary","resources":{"hostingSite":"spuwelfarediary"},"state":"ACTIVE","etag":"1_f875853a-b3d3-42ea-bc47-d9cb681816ba"}
+[info] i  Using project spuwelfarediary (spuwelfarediary) . 
+[info] 
+=== Hosting:github Setup
+[info] 
+[info] i  Didn't detect a .git folder. Assuming C:\Users\Welfare Branch\Desktop\spuwelfarediary is the project root. 
+[info] i  Authorizing with GitHub to upload your service account to a GitHub repository's secrets store. 
+[info] 
+[info] Visit this URL on this device to log in:
+[info] https://github.com/login/oauth/authorize?client_id=89cf50f02ac6aaed3484&state=381038045&redirect_uri=http%3A%2F%2Flocalhost%3A9005&scope=read%3Auser%20repo%20public_repo
+[info] 
+[info] Waiting for authentication...
+[debug] [2025-10-29T11:21:40.169Z] >>> [apiv2][query] POST https://github.com/login/oauth/access_token [none]
+[debug] [2025-10-29T11:21:40.169Z] >>> [apiv2][body] POST https://github.com/login/oauth/access_token [stream]
+[debug] [2025-10-29T11:21:41.122Z] <<< [apiv2][status] POST https://github.com/login/oauth/access_token 200
+[debug] [2025-10-29T11:21:41.122Z] <<< [apiv2][body] POST https://github.com/login/oauth/access_token {"access_token":"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","token_type":"bearer","scope":"read:user,repo"}
+[debug] [2025-10-29T11:21:41.129Z] >>> [apiv2][query] GET https://api.github.com/user [none]
+[debug] [2025-10-29T11:21:42.113Z] <<< [apiv2][status] GET https://api.github.com/user 200
+[debug] [2025-10-29T11:21:42.113Z] <<< [apiv2][body] GET https://api.github.com/user {"login":"spuwelfarediary-cloud","id":238992453,"node_id":"U_kgDODj68RQ","avatar_url":"https://avatars.githubusercontent.com/u/238992453?v=4","gravatar_id":"","url":"https://api.github.com/users/spuwelfarediary-cloud","html_url":"https://github.com/spuwelfarediary-cloud","followers_url":"https://api.github.com/users/spuwelfarediary-cloud/followers","following_url":"https://api.github.com/users/spuwelfarediary-cloud/following{/other_user}","gists_url":"https://api.github.com/users/spuwelfarediary-cloud/gists{/gist_id}","starred_url":"https://api.github.com/users/spuwelfarediary-cloud/starred{/owner}{/repo}","subscriptions_url":"https://api.github.com/users/spuwelfarediary-cloud/subscriptions","organizations_url":"https://api.github.com/users/spuwelfarediary-cloud/orgs","repos_url":"https://api.github.com/users/spuwelfarediary-cloud/repos","events_url":"https://api.github.com/users/spuwelfarediary-cloud/events{/privacy}","received_events_url":"https://api.github.com/users/spuwelfarediary-cloud/received_events","type":"User","user_view_type":"private","site_admin":false,"name":null,"company":null,"blog":"","location":null,"email":null,"hireable":null,"bio":null,"twitter_username":null,"notification_email":null,"public_repos":1,"public_gists":0,"followers":0,"following":0,"created_at":"2025-10-19T12:58:23Z","updated_at":"2025-10-19T12:58:23Z","private_gists":0,"total_private_repos":0,"owned_private_repos":0,"disk_usage":130,"collaborators":0,"two_factor_authentication":false,"plan":{"name":"free","space":976562499,"collaborators":0,"private_repos":10000}}
+[info] 
+[info] +  Success! Logged into GitHub as spuwelfarediary-cloud 
+[info] 
+[debug] [2025-10-29T11:37:15.009Z] >>> [apiv2][query] GET https://api.github.com/repos//actions/secrets/public-key type=owner
+[debug] [2025-10-29T11:37:15.939Z] <<< [apiv2][status] GET https://api.github.com/repos//actions/secrets/public-key 404
+[debug] [2025-10-29T11:37:15.939Z] <<< [apiv2][body] GET https://api.github.com/repos//actions/secrets/public-key {"message":"Not Found","documentation_url":"https://docs.github.com/rest","status":"404"}
+[info] 
+[info] 
+[error] !  The provided authorization cannot be used with this repository. If this repository is in an organization, did you remember to grant access? 
+[info] 
+[info] i  Action required: Visit this URL to ensure access has been granted to the appropriate organization(s) for the Firebase CLI GitHub OAuth App: 
+[info] https://github.com/settings/connections/applications/89cf50f02ac6aaed3484
+[info] 
+[debug] [2025-10-29T11:37:23.256Z] >>> [apiv2][query] GET https://api.github.com/repos//actions/secrets/public-key type=owner
+[debug] [2025-10-29T11:37:23.962Z] <<< [apiv2][status] GET https://api.github.com/repos//actions/secrets/public-key 404
+[debug] [2025-10-29T11:37:23.962Z] <<< [apiv2][body] GET https://api.github.com/repos//actions/secrets/public-key {"message":"Not Found","documentation_url":"https://docs.github.com/rest","status":"404"}
+[info] 
+[info] 
+[error] !  The provided authorization cannot be used with this repository. If this repository is in an organization, did you remember to grant access? 
+[info] 
+[info] i  Action required: Visit this URL to ensure access has been granted to the appropriate organization(s) for the Firebase CLI GitHub OAuth App: 
+[info] https://github.com/settings/connections/applications/89cf50f02ac6aaed3484
+[info] 
