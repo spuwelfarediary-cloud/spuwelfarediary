@@ -87,16 +87,19 @@
             <h2 class="text-2xl font-bold text-[var(--text-primary)] mb-6 text-center">Login to Welfare Diary</h2>
             <form id="loginForm" class="space-y-4">
                 <div>
-                    <label for="username" class="text-sm font-semibold text-[var(--text-secondary)]">Username</label>
-                    <input type="text" id="username" class="mt-1 w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all" placeholder="Enter username" required aria-required="true">
+                    <label for="email" class="text-sm font-semibold text-[var(--text-secondary)]">Email</label>
+                    <input type="email" id="email" class="mt-1 w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all" placeholder="Enter email" required aria-required="true">
                 </div>
                 <div>
                     <label for="password" class="text-sm font-semibold text-[var(--text-secondary)]">Password</label>
                     <input type="password" id="password" class="mt-1 w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all" placeholder="Enter password" required aria-required="true">
                 </div>
+                <div class="text-right">
+                    <a href="#" id="forgotPassword" class="text-blue-500 text-sm hover:underline">Forgot Password?</a>
+                </div>
                 <button type="submit" class="w-full bg-[var(--primary-color)] text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">Login</button>
             </form>
-            <p id="loginError" class="text-red-500 text-sm mt-4 hidden">Invalid username or password</p>
+            <p id="loginError" class="text-red-500 text-sm mt-4 hidden">Invalid email or password</p>
         </div>
     </div>
 
@@ -271,7 +274,6 @@ const SECTIONS = [
 ];
 
 const STORAGE_ROOT = 'welfare_multi_v3';
-const AUTH_STORAGE = 'welfare_auth';
 // NEW GLOBAL STATE VARIABLES
 let state = {}, activeId = 'dashboard', subActiveId = null, filterStatus = null, selectedIndex = null;
 let isSearchMode = false; // Flag to track if the dedicated search results view is active
@@ -372,32 +374,8 @@ function saveState() {
 /* ---------- Login & Logout Logic ---------- */
 // ... (initAuth function remains the same) ...
 async function initAuth() {
-    // ... (initAuth logic) ...
-    const defaultCredentials = { username: 'admin', password: 'welfare123' };
-    if (!localStorage.getItem(AUTH_STORAGE)) {
-        localStorage.setItem(AUTH_STORAGE, JSON.stringify(defaultCredentials));
-    }
-
-    if (sessionStorage.getItem('welfare_logged_in') === 'true') {
-        loginPage.classList.add('hidden');
-        appContent.classList.remove('hidden');
-        await loadState();
-        buildMenu();
-        renderContent();
-        applyLayout();
-    } else {
-        loginPage.classList.remove('hidden');
-        appContent.classList.add('hidden');
-    }
-
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const stored = JSON.parse(localStorage.getItem(AUTH_STORAGE));
-
-        if (username === stored.username && password === stored.password) {
-            sessionStorage.setItem('welfare_logged_in', 'true');
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
             loginPage.classList.add('hidden');
             appContent.classList.remove('hidden');
             await loadState();
@@ -405,17 +383,48 @@ async function initAuth() {
             renderContent();
             applyLayout();
         } else {
+            loginPage.classList.remove('hidden');
+            appContent.classList.add('hidden');
+        }
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            // The onAuthStateChanged will handle showing the app
+        } catch (error) {
+            loginError.textContent = 'Invalid email or password';
             loginError.classList.remove('hidden');
         }
     });
 
-    logoutBtn.addEventListener('click', () => {
-        sessionStorage.removeItem('welfare_logged_in');
-        loginPage.classList.remove('hidden');
-        appContent.classList.add('hidden');
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        loginError.classList.add('hidden');
+    document.getElementById('forgotPassword').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const resetEmail = prompt('Enter your email to reset password:');
+        if (resetEmail) {
+            try {
+                await sendPasswordResetEmail(auth, resetEmail);
+                alert('Password reset email sent. Check your inbox.');
+            } catch (error) {
+                alert('Failed to send reset email. Please try again.');
+            }
+        }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await signOut(auth);
+            // The onAuthStateChanged will handle showing the login page
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            loginError.classList.add('hidden');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
     });
 }
 /* ---------- Menu Toggle Logic ---------- */
@@ -1578,8 +1587,9 @@ window.onload = async function() {
 
 <script type="module">
   // ✅ Import required SDKs
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getFirestore, collection, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getFirestore, collection, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
   // ✅ Your Firebase Config
   const firebaseConfig = {
@@ -1593,16 +1603,18 @@ window.onload = async function() {
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
   window.db = db;
+  window.auth = auth;
   window.getDoc = getDoc;
   window.setDoc = setDoc;
   window.doc = doc;
   window.collection = collection;
+  window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+  window.signOut = signOut;
+  window.onAuthStateChanged = onAuthStateChanged;
+  window.sendPasswordResetEmail = sendPasswordResetEmail;
  </script>
 
 </body>
 </html>
-
-<!-- Test update from E drive -->
-
-<!-- Test update from github -->
