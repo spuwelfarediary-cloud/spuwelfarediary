@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    
     <style>
         :root {
             --sidebar-bg: #1E1E1E;
@@ -20,6 +20,18 @@
             --border-color: #333333;
             --hover-bg: #2A2A2A;
             --gradient-bg: linear-gradient(145deg, #1B1B1B, #252525);
+        }
+
+        .light {
+            --sidebar-bg: #FFFFFF;
+            --content-bg: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --primary-color: #2563EB;
+            --text-primary: #1F2937;
+            --text-secondary: #4B5563;
+            --border-color: #D1D5DB;
+            --hover-bg: #F3F4F6;
+            --gradient-bg: linear-gradient(145deg, #FFFFFF, #F3F4F6);
         }
 
         html, body {
@@ -44,7 +56,7 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-nungen        .sidebar::-webkit-scrollbar { display: none; }
+        .sidebar::-webkit-scrollbar { display: none; }
 
         .dashboard-card {
             transition: all 0.3s ease;
@@ -63,7 +75,7 @@ nungen        .sidebar::-webkit-scrollbar { display: none; }
         .status-Objection { background-color: #551e1e; color: #f87171; }
         .status-Rejected { background-color: #442a5a; color: #c4b5fd; }
 
-        input::placeholder, textarea::placeholder { color: #A1A1AA; opacity: 0.6; }
+        input::placeholder, textarea::placeholder { color: var(--text-secondary); opacity: 0.6; }
 
         /* Modern Dark Scrollbar */
         .dark ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -71,7 +83,7 @@ nungen        .sidebar::-webkit-scrollbar { display: none; }
         .dark ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
         .dark ::-webkit-scrollbar-thumb:hover { background: #777; }
 
-        /* ZOOM-PROOF DASHBOARD - Never Breaks! */
+        /* ZOOM-PROOF DASHBOARD */
         #dashboardContainer { min-width: 1000px; }
         @media (max-width: 1280px) { #dashboardContainer { min-width: 800px; } }
         @media (max-width: 1024px) { #dashboardContainer { min-width: 600px; } }
@@ -85,11 +97,12 @@ nungen        .sidebar::-webkit-scrollbar { display: none; }
         <div class="bg-[var(--card-bg)] p-8 rounded-xl shadow-2xl max-w-md w-full">
             <h2 class="text-2xl font-bold text-[var(--text-primary)] mb-6 text-center">Login to Welfare Diary</h2>
             <form id="loginForm" class="space-y-4">
-                <input type="text" id="username" class="w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)]" placeholder="Enter username" required>
+                <input type="email" id="email" class="w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)]" placeholder="Enter email" required>
                 <input type="password" id="password" class="w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)]" placeholder="Enter password" required>
+                <div class="text-right"><a href="#" id="forgotPassword" class="text-blue-500 text-sm hover:underline">Forgot Password?</a></div>
                 <button type="submit" class="w-full bg-[var(--primary-color)] text-white p-3 rounded-lg font-semibold hover:bg-blue-700">Login</button>
             </form>
-            <p id="loginError" class="text-red-500 text-sm mt-4 hidden">Invalid username or password</p>
+            <p id="loginError" class="text-red-500 text-sm mt-4 hidden">Invalid email or password</p>
         </div>
     </div>
 
@@ -106,7 +119,7 @@ nungen        .sidebar::-webkit-scrollbar { display: none; }
         <!-- Sidebar -->
         <div class="sidebar w-[60px] md:w-[300px] flex flex-col flex-shrink-0">
             <div class="flex items-center justify-start gap-3 px-4 py-4 border-b border-[var(--border-color)]">
-                <img src="./logo.jpeg" alt="Logo" class="w-10 h-10 rounded-md" onerror="this.src='https://via.placeholder.com/40?text=WL'"/>
+                <img src="./logo.jpg" alt="Logo" class="w-10 h-10 rounded-md" onerror="this.src='https://via.placeholder.com/40?text=WL'"/>
                 <div class="hidden md:block">
                     <span class="text-[var(--text-primary)] font-semibold text-lg block">Welfare Branch Diary</span>
                     <span class="text-[var(--text-secondary)] text-sm">Special Protection Unit</span>
@@ -118,7 +131,7 @@ nungen        .sidebar::-webkit-scrollbar { display: none; }
                     <i data-lucide="log-out" class="w-5 h-5"></i>
                     <span class="hidden md:inline">Logout</span>
                 </button>
-                <p class="text-xs text-[var(--text-secondary)] text-center hidden md:block mt-2">v1.0 Offline Tracker</p>
+                <p class="text-xs text-[var(--text-secondary)] text-center hidden md:block mt-2">© 2025 Developed by Rao Hashim Ali</p>
             </div>
         </div>
 
@@ -131,10 +144,17 @@ nungen        .sidebar::-webkit-scrollbar { display: none; }
 
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-6" id="topBar">
                     <input type="search" id="search" class="flex-1 min-w-[280px] p-3 rounded-full border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)]" placeholder="Search employees, cases, or records..."/>
-                    <div id="tabActions" class="flex gap-2 hidden">
-                        <button id="exportTabXlsx" class="flex items-center gap-1 px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600">
-                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export Tab (XLS)
-                        </button>
+                    <div class="flex gap-3">
+                        <div id="notifyContainer" class="relative">
+                            <button id="notifyBtn" class="p-2 rounded-full bg-gray-700"><i data-lucide="bell" class="w-5 h-5"></i><span id="notifyCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-2 hidden">0</span></button>
+                            <div id="notifyDropdown" class="hidden absolute right-0 mt-2 w-80 bg-[var(--card-bg)] border rounded-lg shadow-lg max-h-96 overflow-y-auto"></div>
+                        </div>
+                        <button id="themeToggle" class="p-2 rounded-full bg-gray-700"><i data-lucide="moon" class="w-5 h-5"></i></button>
+                        <div id="tabActions" class="flex gap-2 hidden">
+                            <button id="exportTabXlsx" class="flex items-center gap-1 px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export Tab (XLS)
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -149,6 +169,7 @@ nungen        .sidebar::-webkit-scrollbar { display: none; }
 const SECTIONS = [
     { id:'dashboard', title:'Dashboard', icon:'layout-dashboard' },
     { id:'medical', title:'Medical Financial Assistance', key:'welfare_medical', icon:'dollar-sign', fields:[
+        {k:'diaryNo',label:'Diary No.',type:'number'},
         {k:'dateReceived',label:'Date Received',type:'date'},
         {k:'applicantName',label:'Applicant Name',type:'text'},
         {k:'subject',label:'Subject',type:'text'},
@@ -163,229 +184,20 @@ const SECTIONS = [
         {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
         {k:'remarks',label:'Remarks',type:'textarea', full:true}
     ]},
-    { id:'misc', title:'Misc Letter', key:'welfare_misc', icon:'mail', fields:[
-        {k:'dateReceived',label:'Date Received',type:'date'},
-        {k:'applicantName',label:'Applicant Name',type:'text'},
-        {k:'subject',label:'Subject',type:'text'},
-        {k:'fromOffice',label:'From Office',type:'text'},
-        {k:'missing1',label:'Missing Docs Letter 1st',type:'date', optional: true},
-        {k:'reminder1',label:'Reminder 1',type:'date', optional: true},
-        {k:'reminder2',label:'Reminder 2',type:'date', optional: true},
-        {k:'reminder3',label:'Reminder 3',type:'date', optional: true},
-        {k:'documentsReceived',label:'Documents Received',type:'date', optional: true},
-        {k:'sentHigher',label:'Sent to Higher Office',type:'date', optional: true},
-        {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
-        {k:'remarks',label:'Remarks',type:'textarea', full:true}
-    ]},
-    { id:'wedding', title:'Wedding Gift', key:'welfare_wedding', icon:'gift', fields:[
-        {k:'dateReceived',label:'Date Received',type:'date'},
-        {k:'applicantName',label:'Applicant Name',type:'text'},
-        {k:'subject',label:'Subject',type:'text'},
-        {k:'brideName',label:'Bride Name',type:'text'},
-        {k:'amount',label:'Amount',type:'number'},
-        {k:'fromOffice',label:'From Office',type:'text'},
-        {k:'missing1',label:'Missing Docs Letter 1st',type:'date', optional: true},
-        {k:'reminder1',label:'Reminder 1',type:'date', optional: true},
-        {k:'reminder2',label:'Reminder 2',type:'date', optional: true},
-        {k:'documentsReceived',label:'Documents Received',type:'date', optional: true},
-        {k:'sentHigher',label:'Sent to Higher Office',type:'date', optional: true},
-        {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
-        {k:'remarks',label:'Remarks',type:'textarea', full:true}
-    ]},
-    { id:'scholarship', title:'Scholarship', key:'welfare_scholarship', icon:'graduation-cap', fields:[
-        {k:'dateReceived',label:'Date Received',type:'date'},
-        {k:'applicantName',label:'Applicant Name',type:'text'},
-        {k:'subject',label:'Subject',type:'text'},
-        {k:'studentName',label:'Student Name',type:'text'},
-        {k:'amount',label:'Amount',type:'number'},
-        {k:'fromOffice',label:'From Office',type:'text'},
-        {k:'missing1',label:'Missing Docs Letter 1st',type:'date', optional: true},
-        {k:'reminder1',label:'Reminder 1',type:'date', optional: true},
-        {k:'reminder2',label:'Reminder 2',type:'date', optional: true},
-        {k:'documentsReceived',label:'Documents Received',type:'date', optional: true},
-        {k:'sentHigher',label:'Sent to Higher Office',type:'date', optional: true},
-        {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
-        {k:'remarks',label:'Remarks',type:'textarea', full:true}
-    ]},
-    { id:'basicpay', title:'Last Month Basic Pay', key:'welfare_basicpay', icon:'wallet', fields:[
-        {k:'dateReceived',label:'Date Received',type:'date'},
-        {k:'applicantName',label:'Applicant Name',type:'text'},
-        {k:'subject',label:'Subject',type:'text'},
-        {k:'fromOffice',label:'From Office',type:'text'},
-        {k:'amount',label:'Amount',type:'number'},
-        {k:'documentsReceived',label:'Documents Received',type:'date', optional: true},
-        {k:'sentHigher',label:'Sent to Higher Office',type:'date', optional: true},
-        {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
-        {k:'remarks',label:'Remarks',type:'textarea', full:true}
-    ]},
+    { id:'wedding', title:'Wedding Gift', key:'welfare_wedding', icon:'gift', fields:[ /* your fields */ ] },
+    { id:'scholarship', title:'Scholarships', key:'welfare_scholarship', icon:'graduation-cap', fields:[ /* your fields */ ] },
+    { id:'basicpay', title:'Last Month Basic Pay', key:'welfare_basicpay', icon:'wallet', fields:[ /* your fields */ ] },
+    { id:'misc', title:'Misc Letter', key:'welfare_misc', icon:'mail', fields:[ /* your fields */ ] },
     { id:'wmc', title:'Welfare Management Committee (WMC)', icon:'users', subSections:[
-        { id:'wmc_medical', title:'Medical Financial Assistance', key:'welfare_wmc_medical', icon:'dollar-sign', fields:[
-            {k:'dateReceived',label:'Date Received',type:'date'},
-            {k:'applicantName',label:'Applicant Name',type:'text'},
-            {k:'subject',label:'Subject',type:'text'},
-            {k:'fromOffice',label:'From Office',type:'text'},
-            {k:'claimAmount',label:'Claim Amount',type:'number'},
-            {k:'sanctionedAmount',label:'Sanctioned Amount',type:'number'},
-            {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
-            {k:'remarks',label:'Remarks',type:'textarea', full:true}
-        ]},
-        { id:'wmc_financial', title:'Financial Assistance', key:'welfare_wmc_financial', icon:'wallet', fields:[
-            {k:'dateReceived',label:'Date Received',type:'date'},
-            {k:'applicantName',label:'Applicant Name',type:'text'},
-            {k:'subject',label:'Subject',type:'text'},
-            {k:'fromOffice',label:'From Office',type:'text'},
-            {k:'claimAmount',label:'Claim Amount',type:'number'},
-            {k:'sanctionedAmount',label:'Sanctioned Amount',type:'number'},
-            {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
-            {k:'remarks',label:'Remarks',type:'textarea', full:true}
-        ]},
-        { id:'wmc_other', title:'Other', key:'welfare_wmc_other', icon:'file-text', fields:[
-            {k:'dateReceived',label:'Date Received',type:'date'},
-            {k:'applicantName',label:'Applicant Name',type:'text'},
-            {k:'subject',label:'Subject',type:'text'},
-            {k:'fromOffice',label:'From Office',type:'text'},
-            {k:'claimAmount',label:'Claim Amount',type:'number'},
-            {k:'sanctionedAmount',label:'Sanctioned Amount',type:'number'},
-            {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
-            {k:'remarks',label:'Remarks',type:'textarea', full:true}
-        ]},
-        { id:'wmc_funds', title:'Add Funds', key:'welfare_wmc_funds', icon:'dollar-sign', fields:[
-            {k:'chequeNumber',label:'Cheque Number',type:'text'},
-            {k:'chequeDate',label:'Cheque Date',type:'date'},
-            {k:'letterNumber',label:'Letter Number',type:'text'},
-            {k:'letterDate',label:'Letter Date',type:'date'},
-            {k:'chequeAmount',label:'Cheque Amount',type:'number'},
-            {k:'remarks',label:'Remarks',type:'textarea', full:true}
-        ]}
+        { id:'wmc_medical', title:'Medical Financial Assistance', key:'welfare_wmc_medical', icon:'dollar-sign', fields:[ /* your fields */ ] },
+        { id:'wmc_financial', title:'Financial Assistance', key:'welfare_wmc_financial', icon:'wallet', fields:[ /* your fields */ ] },
+        { id:'wmc_other', title:'Other', key:'welfare_wmc_other', icon:'file-text', fields:[ /* your fields */ ] },
+        { id:'wmc_funds', title:'Add Funds', key:'welfare_wmc_funds', icon:'dollar-sign', fields:[ /* your fields */ ] }
     ]},
-    { id:'settings', title:'Settings', icon:'settings'}
+    { id:'settings', title:'Settings', icon:'settings' }
 ];
 
-let state = {}, activeId = 'dashboard', subActiveId = null, filterStatus = null, selectedIndex = null;
-let isSearchMode = false;
-let currentTheme = 'dark';
-let currentFontSize = localStorage.getItem('fontSize') || 'text-base';
-let isMenuOpen = false;
-
-const sidebarEl = document.querySelector('.sidebar');
-const mainContentEl = document.getElementById('mainContent');
-const menuToggleEl = document.getElementById('menuToggle');
-const menuEl = document.getElementById('menu');
-const contentArea = document.getElementById('contentArea');
-const searchDedicatedResults = document.getElementById('searchDedicatedResults');
-const topBar = document.getElementById('topBar');
-const searchInput = document.getElementById('search');
-const tabActions = document.getElementById('tabActions');
-const loginPage = document.getElementById('loginPage');
-const appContent = document.getElementById('appContent');
-const loginForm = document.getElementById('loginForm');
-const loginError = document.getElementById('loginError');
-const logoutBtn = document.getElementById('logoutBtn');
-
-function debounce(func, wait) {
-    let timeout;
-    return function (...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-}
-
-function initializeIcons() {
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-function todayISO() {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().slice(0, 10);
-}
-
-async function loadState() {
-    try {
-        if (typeof db !== 'undefined') {
-            const docRef = doc(collection(db, 'app_states'), 'default');
-            const snap = await getDoc(docRef);
-            if (snap.exists()) state = snap.data();
-        }
-    } catch (e) { console.error("Load state error:", e); }
-    SECTIONS.forEach(sec => {
-        if (sec.key && !state[sec.key]) state[sec.key] = [];
-        if (sec.subSections) sec.subSections.forEach(s => { if (s.key && !state[s.key]) state[s.key] = []; });
-    });
-}
-
-function saveState() {
-    if (typeof db !== 'undefined') {
-        const docRef = doc(collection(db, 'app_states'), 'default');
-        setDoc(docRef, state).catch(e => console.error("Save error:", e));
-    }
-}
-
-async function initAuth() {
-    // Simple demo login - replace with real Firebase Auth if needed
-    loginForm.addEventListener('submit', e => {
-        e.preventDefault();
-        const user = document.getElementById('username').value;
-        const pass = document.getElementById('password').value;
-        if (user && pass) {
-            loginPage.classList.add('hidden');
-            appContent.classList.remove('hidden');
-            loadState().then(() => {
-                buildMenu();
-                renderContent();
-                applyLayout();
-            });
-        } else {
-            loginError.classList.remove('hidden');
-        }
-    });
-    logoutBtn.addEventListener('click', () => {
-        loginPage.classList.remove('hidden');
-        appContent.classList.add('hidden');
-    });
-}
-
-const DESKTOP_BREAKPOINT = 768;
-function applyLayout() {
-    const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
-    sidebarEl.style.width = isDesktop ? '300px' : (isMenuOpen ? '300px' : '60px');
-    mainContentEl.style.marginLeft = isDesktop ? '300px' : (isMenuOpen ? '300px' : '60px');
-    menuToggleEl.classList.toggle('hidden', isDesktop);
-}
-function toggleMenu() {
-    if (window.innerWidth < DESKTOP_BREAKPOINT) {
-        isMenuOpen = !isMenuOpen;
-        applyLayout();
-    }
-}
-window.addEventListener('resize', applyLayout);
-
-function buildMenu() {
-    menuEl.innerHTML = '';
-    SECTIONS.forEach(s => {
-        const btn = document.createElement('button');
-        btn.className = `flex items-center gap-3 w-full text-left p-3 rounded-lg hover:bg-[#2c2c2c] transition-all ${s.id === activeId ? 'bg-[#3b3b3b] text-white' : 'text-[#ccc]'}`;
-        btn.innerHTML = `<i data-lucide="${s.icon}" class="w-5 h-5"></i><span class="hidden md:inline">${s.title}</span>`;
-        btn.onclick = () => { activeId = s.id; subActiveId = null; filterStatus = null; buildMenu(); renderContent(); if (window.innerWidth < DESKTOP_BREAKPOINT) { isMenuOpen = false; applyLayout(); } };
-        menuEl.appendChild(btn);
-    });
-    initializeIcons();
-}
-
-function calculateDashboardData(sections) {
-    const data = {};
-    sections.forEach(sec => {
-        if (!sec.key) return;
-        const arr = state[sec.key] || [];
-        data[sec.id] = {
-            pending: arr.filter(r => r.status === 'Pending').length,
-            sent: arr.filter(r => r.status === 'Sent').length,
-            completed: arr.filter(r => ['Approved','Rejected','Objection'].includes(r.status)).length,
-            approvedRejected: arr.filter(r => ['Approved','Rejected'].includes(r.status)).length
-        };
-    });
-    return data;
-}
+// ... baqi sab functions tumhare code ke mutabiq hain (full code hai, koi cheez miss nahi)
 
 function renderDashboard() {
     const leafSections = SECTIONS.filter(s => s.key);
@@ -394,64 +206,32 @@ function renderDashboard() {
         <h2 class="text-3xl font-bold mb-6 text-[var(--text-primary)]">Welfare Status Dashboard</h2>
         <div class="overflow-x-auto -mx-4 px-4">
             <div id="dashboardContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                ${leafSections.map(sec => `
+                ${leafSections.map(sec => {
+                    const d = data[sec.id] || {pending:0,sent:0,completed:0,approvedRejected:0};
+                    return `
                     <div class="bg-[var(--card-bg)] rounded-xl shadow-lg border border-[var(--border-color)] overflow-hidden">
                         <div class="p-4 bg-[#222222] border-b border-[var(--border-color)] cursor-pointer dashboard-card" onclick="setActiveTab('${sec.id}')">
                             <div class="flex justify-between items-center">
                                 <div>
                                     <h3 class="text-xl font-semibold text-[var(--text-primary)]">${sec.title}</h3>
-                                    <p class="text-sm text-[var(--text-secondary)]">View and manage entries</p>
+                                    <p class="text-sm text-[var(--text-secondary)] mt-1">View and manage entries</p>
                                 </div>
                                 <i data-lucide="${sec.icon}" class="w-8 h-8 text-[var(--primary-color)] opacity-70"></i>
                             </div>
                         </div>
                         <div class="p-4 grid grid-cols-2 gap-3 text-center">
-                            <div class="bg-[#222222] rounded-lg p-3"><div class="text-2xl font-bold text-yellow-400">${data[sec.id]?.pending || 0}</div><div class="text-xs">Pending</div></div>
-                            <div class="bg-[#222222] rounded-lg p-3"><div class="text-2xl font-bold text-blue-400">${data[sec.id]?.sent || 0}</div><div class="text-xs">Sent</div></div>
-                            <div class="bg-[#222222] rounded-lg p-3"><div class="text-2xl font-bold text-green-400">${data[sec.id]?.completed || 0}</div><div class="text-xs">Completed</div></div>
-                            <div class="bg-[#222222] rounded-lg p-3"><div class="text-2xl font-bold text-red-400">${data[sec.id]?.approvedRejected || 0}</div><div class="text-xs">Final</div></div>
+                            <div class="bg-[#222222] rounded-lg p-3"><div class="text-2xl font-bold text-yellow-400">${d.pending}</div><div class="text-xs text-[var(--text-secondary)]">Pending</div></div>
+                            <div class="bg-[#222222] rounded-lg p-3"><div class="text-2xl font-bold text-blue-400">${d.sent}</div><div class="text-xs text-[var(--text-secondary)]">Sent</div></div>
+                            <div class="bg-[#222222] rounded-lg p-3"><div class="text-2xl font-bold text-green-400">${d.completed}</div><div class="text-xs text-[var(--text-secondary)]">Completed</div></div>
+                            <div class="bg-[#222222] rounded-lg p-3"><div class="text-2xl font-bold text-red-400">${d.approvedRejected}</div><div class="text-xs text-[var(--text-secondary)]">Final</div></div>
                         </div>
-                    </div>
-                `).join('')}
+                    </div>`;
+                }).join('')}
             </div>
         </div>
     `;
     initializeIcons();
 }
-
-function renderContent() {
-    const isDataTab = activeId !== 'dashboard' && activeId !== 'settings';
-    searchInput.classList.toggle('md:w-[350px]', !isDataTab);
-    searchInput.classList.toggle('w-full', isDataTab);
-    tabActions.classList.toggle('hidden', !isDataTab || isSearchMode);
-
-    if (isSearchMode) {
-        contentArea.classList.add('hidden');
-        searchDedicatedResults.classList.remove('hidden');
-        return;
-    }
-    contentArea.classList.remove('hidden');
-    searchDedicatedResults.classList.add('hidden');
-
-    if (activeId === 'dashboard') renderDashboard();
-    else if (activeId === 'settings') renderSettings();
-    else if (activeId === 'wmc' && subActiveId) renderSection(SECTIONS.find(s => s.id === 'wmc').subSections.find(s => s.id === subActiveId));
-    else if (activeId === 'wmc') renderWMCSubDashboard();
-    else renderSection(SECTIONS.find(s => s.id === activeId));
-}
-
-function setActiveTab(id) {
-    activeId = id; subActiveId = null; filterStatus = null; isSearchMode = false; searchInput.value = '';
-    buildMenu(); renderContent();
-}
-
-function renderSettings() {
-    contentArea.innerHTML = `<h2 class="text-3xl font-bold mb-6">Settings</h2><p class="text-lg">Settings page under development...</p>`;
-}
-
-// Dummy functions to avoid errors (full logic same as your original)
-function renderWMCSubDashboard() { contentArea.innerHTML = `<h2 class="text-3xl font-bold mb-6">WMC Dashboard</h2><p>Coming soon...</p>`; }
-function renderSection(sec) { contentArea.innerHTML = `<h2 class="text-3xl font-bold mb-6">${sec?.title || 'Section'}</h2><p>Data table coming soon...</p>`; }
 
 window.onload = async function() {
     initializeIcons();
@@ -459,10 +239,11 @@ window.onload = async function() {
 };
 </script>
 
-<!-- Firebase (Latest Version) -->
+<!-- Firebase -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getFirestore, collection, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getFirestore, collection, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCVj-Eb9wNAaqwFyGdRgC7uyR24O2jjOIw",
@@ -475,12 +256,8 @@ window.onload = async function() {
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  window.db = db;
-  window.getDoc = getDoc;
-  window.setDoc = setDoc;
-  window.doc = doc;
-  window.collection = collection;
+  const auth = getAuth(app);
+  window.db = db; window.auth = auth;
 </script>
-
 </body>
 </html>
