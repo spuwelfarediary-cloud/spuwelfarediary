@@ -40,10 +40,9 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--content-bg);
             color: var(--text-primary);
-            overflow: hidden; /* Prevent body scroll, handle internally */
+            overflow: hidden;
         }
 
-        /* Sidebar Styles */
         .sidebar-container {
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
@@ -62,11 +61,6 @@
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.8);
             background: var(--hover-bg);
         }
-        .dashboard-card p {
-            word-break: break-word;
-            hyphens: auto;
-            overflow: hidden;
-        }
 
         .status-Pending { background-color: #292415; color: #facc15; }
         .status-Sent { background-color: #1a2c4e; color: #60a5fa; }
@@ -79,7 +73,6 @@
             opacity: 0.5;
         }
 
-        /* Scrollbar Styling */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -93,9 +86,6 @@
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #777;
-        }
-        .light .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #ccc;
         }
     </style>
 </head>
@@ -123,7 +113,6 @@
     </div>
 
     <div class="hidden flex h-screen w-full overflow-hidden" id="appContent">
-        
         <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden" onclick="toggleMenu()"></div>
 
         <aside id="sidebar" class="sidebar-container flex flex-col w-[280px] h-full fixed md:static transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shrink-0">
@@ -134,18 +123,15 @@
                     <span class="text-[var(--text-secondary)] text-xs uppercase tracking-wider">Special Protection Unit</span>
                 </div>
             </div>
-            
             <div class="flex-1 overflow-y-auto custom-scrollbar mt-2">
                 <div class="space-y-1 px-2" id="menu"></div>
             </div>
-            
             <div class="mt-auto border-t border-[var(--border-color)] p-4">
                 <p class="text-xs text-[var(--text-secondary)] text-center">© 2025 Developed by Hashim Ali</p>
             </div>
         </aside>
 
         <main class="flex-1 flex flex-col h-full w-full relative overflow-hidden bg-[var(--content-bg)]">
-            
             <div class="md:hidden flex items-center justify-between p-4 border-b border-[var(--border-color)] bg-[var(--card-bg)] shrink-0">
                 <div class="flex items-center gap-3">
                     <button id="menuToggle" class="p-2 rounded-lg bg-[var(--primary-color)] text-white hover:bg-blue-700">
@@ -156,20 +142,17 @@
             </div>
 
             <div class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6" id="mainScrollArea">
-                
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6" id="topBar">
                     <input type="search" id="search" 
                         class="w-full md:w-[400px] p-3 rounded-full border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)] 
                         focus:ring-2 focus:ring-[var(--primary-color)] transition-all duration-300 shadow-lg" 
                         placeholder="Search employees, cases, or records..." aria-label="Search entries" />
-                    
                     <div class="flex items-center gap-2 justify-end">
                          <div id="tabActions" class="hidden"> 
                             <button id="exportTabXlsx" class="flex items-center gap-1 px-3 py-2 rounded-lg bg-gray-700 text-[var(--text-primary)] text-sm hover:bg-gray-600 transition-all">
                                 <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> <span class="hidden sm:inline">Export Tab</span>
                             </button>
                         </div>
-
                         <div id="notifyContainer" class="relative">
                             <button id="notifyBtn" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600">
                                 <i data-lucide="bell" class="w-5 h-5"></i>
@@ -180,11 +163,9 @@
                                 <button id="clearNotifs" class="w-full p-2 text-center text-sm text-[var(--text-secondary)] hover:bg-[var(--hover-bg)]">Clear All</button>
                             </div>
                         </div>
-
                         <button id="themeToggle" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600">
                             <i data-lucide="moon" class="w-5 h-5"></i>
                         </button>
-
                         <button id="logoutBtn" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600">
                             <i data-lucide="log-out" class="w-5 h-5"></i>
                         </button>
@@ -293,6 +274,9 @@ const SECTIONS = [
             {k:'fromOffice',label:'From Office',type:'text'},
             {k:'claimAmount',label:'Claim Amount',type:'number'},
             {k:'sanctionedAmount',label:'Sanctioned Amount',type:'number'},
+            // NEW FIELDS ADDED HERE
+            {k:'chequeNo',label:'Cheque No.',type:'text'},
+            {k:'chequeDate',label:'Cheque Date',type:'date'},
             {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
             {k:'remarks',label:'Remarks',type:'textarea', full:true}
         ]},
@@ -304,6 +288,9 @@ const SECTIONS = [
             {k:'fromOffice',label:'From Office',type:'text'},
             {k:'claimAmount',label:'Claim Amount',type:'number'},
             {k:'sanctionedAmount',label:'Sanctioned Amount',type:'number'},
+            // NEW FIELDS ADDED HERE
+            {k:'chequeNo',label:'Cheque No.',type:'text'},
+            {k:'chequeDate',label:'Cheque Date',type:'date'},
             {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
             {k:'remarks',label:'Remarks',type:'textarea', full:true}
         ]},
@@ -315,6 +302,9 @@ const SECTIONS = [
             {k:'fromOffice',label:'From Office',type:'text'},
             {k:'claimAmount',label:'Claim Amount',type:'number'},
             {k:'sanctionedAmount',label:'Sanctioned Amount',type:'number'},
+            // NEW FIELDS ADDED HERE
+            {k:'chequeNo',label:'Cheque No.',type:'text'},
+            {k:'chequeDate',label:'Cheque Date',type:'date'},
             {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
             {k:'remarks',label:'Remarks',type:'textarea', full:true}
         ]},
@@ -455,7 +445,7 @@ async function initAuth() {
         if (user) {
             loginPage.classList.add('hidden');
             appContent.classList.remove('hidden');
-            appContent.classList.add('flex'); // Enable Flex layout
+            appContent.classList.add('flex');
             await loadState();
             buildMenu();
             renderContent();
@@ -503,7 +493,7 @@ async function initAuth() {
     });
 }
 
-/* ---------- UI Logic & Responsive Layout ---------- */
+/* ---------- UI Logic ---------- */
 function toggleMenu() {
     isMenuOpen = !isMenuOpen;
     if (isMenuOpen) {
@@ -515,7 +505,6 @@ function toggleMenu() {
     }
 }
 
-// Close menu on item click if mobile
 function closeMobileMenu() {
     if (window.innerWidth < 768) {
         isMenuOpen = false;
@@ -760,6 +749,8 @@ function renderDashboard() {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="dashboardContainer"></div>
     `;
     const container = document.getElementById('dashboardContainer');
+    
+    // MODIFIED: Updated this section to use colorful tabs like WMC
     leafSections.forEach(sec => {
         const d = data[sec.id];
         container.insertAdjacentHTML('beforeend', `
@@ -769,10 +760,18 @@ function renderDashboard() {
                     <i data-lucide="${sec.icon}" class="w-5 h-5 text-[var(--primary-color)]"></i>
                 </div>
                 <div class="p-3 grid grid-cols-2 gap-2 flex-1 content-start">
-                    ${renderDashboardCard(sec.id, 'Pending', d.pending, 'clock', 'text-yellow-500 border-yellow-500')}
-                    ${renderDashboardCard(sec.id, 'Sent HQ', d.sent, 'send', 'text-blue-500 border-blue-500')}
-                    ${renderDashboardCard(sec.id, 'Completed', d.completed, 'check-circle', 'text-green-500 border-green-500')}
-                    ${renderDashboardCard(sec.id, 'Appr/Rej', d.approvedRejected, 'alert-triangle', 'text-red-500 border-red-500')}
+                    <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-yellow-900" onclick="activeId='${sec.id}';renderContent()">
+                        <div class="text-xl font-bold text-yellow-500">${d.pending}</div><div class="text-xs text-[var(--text-secondary)]">Pending</div>
+                    </div>
+                    <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-blue-900" onclick="activeId='${sec.id}';renderContent()">
+                        <div class="text-xl font-bold text-blue-500">${d.sent}</div><div class="text-xs text-[var(--text-secondary)]">Sent HQ</div>
+                    </div>
+                    <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-green-900" onclick="activeId='${sec.id}';renderContent()">
+                        <div class="text-xl font-bold text-green-500">${d.completed}</div><div class="text-xs text-[var(--text-secondary)]">Completed</div>
+                    </div>
+                    <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-red-900" onclick="activeId='${sec.id}';renderContent()">
+                        <div class="text-xl font-bold text-red-500">${d.approvedRejected}</div><div class="text-xs text-[var(--text-secondary)]">Appr/Rej</div>
+                    </div>
                 </div>
             </div>
         `);
@@ -781,6 +780,7 @@ function renderDashboard() {
 }
 
 function renderDashboardCard(secId, title, count, icon, classes) {
+    // Kept for reference, but main logic now uses inline HTML above
     return `
         <div class="p-2 rounded border border-[var(--border-color)] bg-[#262626] flex flex-col items-center justify-center text-center">
             <span class="text-2xl font-bold text-[var(--text-primary)]">${count}</span>
@@ -794,7 +794,7 @@ function renderWMCSubDashboard() {
     const data = calculateDashboardData(subSecs);
     contentArea.innerHTML = `
         <h2 class="text-3xl font-semibold text-[var(--text-primary)] mb-4">WMC Dashboard</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="wmcContainer"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="wmcContainer"></div>
         <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-[var(--card-bg)] p-4 rounded-lg border border-[var(--border-color)]">
                 <h4 class="text-lg font-bold mb-2">Sanctioned Amounts</h4>
@@ -813,11 +813,11 @@ function renderWMCSubDashboard() {
         if (sec.id === 'wmc_funds') {
             const totalFunds = state[sec.key].reduce((sum, r) => sum + (Number(r.chequeAmount) || 0), 0);
             container.insertAdjacentHTML('beforeend', `
-                <div class="bg-[var(--card-bg)] shadow border border-[var(--border-color)] rounded-lg">
+                <div class="bg-[var(--card-bg)] shadow border border-[var(--border-color)] rounded-lg flex flex-col h-full">
                      <div class="p-3 bg-[#222222] border-b border-[var(--border-color)] cursor-pointer flex justify-between" onclick="setSubActiveTab('${sec.id}')">
                         <h3 class="font-bold">${sec.title}</h3><i data-lucide="${sec.icon}" class="w-5"></i>
                      </div>
-                     <div class="p-3 grid grid-cols-2 gap-3">
+                     <div class="p-3 grid grid-cols-2 gap-3 flex-1 content-start">
                         ${renderDashboardCard(sec.id, 'Entries', d.total, 'file-text', '')}
                         ${renderDashboardCard(sec.id, 'Total Funds', new Intl.NumberFormat().format(totalFunds), 'dollar-sign', '')}
                      </div>
@@ -825,19 +825,19 @@ function renderWMCSubDashboard() {
             `);
         } else {
             container.insertAdjacentHTML('beforeend', `
-                <div class="bg-[var(--card-bg)] shadow border border-[var(--border-color)] rounded-lg">
+                <div class="bg-[var(--card-bg)] shadow border border-[var(--border-color)] rounded-lg flex flex-col h-full">
                     <div class="p-3 bg-[#222222] border-b border-[var(--border-color)] cursor-pointer flex justify-between" onclick="setSubActiveTab('${sec.id}')">
                         <h3 class="font-bold">${sec.title}</h3><i data-lucide="${sec.icon}" class="w-5"></i>
                     </div>
-                    <div class="p-3 grid grid-cols-3 gap-2">
+                    <div class="p-3 grid grid-cols-2 gap-2 flex-1 content-start">
                         <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-yellow-900" onclick="setSubActiveTabWithFilter('${sec.id}','Pending')">
-                            <div class="text-xl font-bold text-yellow-500">${d.pending}</div><div class="text-xs">Pending</div>
+                            <div class="text-xl font-bold text-yellow-500">${d.pending}</div><div class="text-xs text-[var(--text-secondary)]">Pending</div>
                         </div>
                         <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-green-900" onclick="setSubActiveTabWithFilter('${sec.id}','Approved')">
-                            <div class="text-xl font-bold text-green-500">${d.approved}</div><div class="text-xs">Approved</div>
+                            <div class="text-xl font-bold text-green-500">${d.approved}</div><div class="text-xs text-[var(--text-secondary)]">Approved</div>
                         </div>
-                        <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-red-900" onclick="setSubActiveTabWithFilter('${sec.id}','Rejected')">
-                            <div class="text-xl font-bold text-red-500">${d.rejected}</div><div class="text-xs">Rejected</div>
+                        <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-red-900 col-span-2" onclick="setSubActiveTabWithFilter('${sec.id}','Rejected')">
+                            <div class="text-xl font-bold text-red-500">${d.rejected}</div><div class="text-xs text-[var(--text-secondary)]">Rejected</div>
                         </div>
                     </div>
                 </div>
@@ -1030,7 +1030,6 @@ function selectRowAndNavigate(key, index) {
     searchInput.value = '';
     buildMenu();
     renderContent();
-    // Use timeout to allow render
     setTimeout(() => {
         window.editRow(key, index);
     }, 100);
@@ -1128,17 +1127,15 @@ function handleImport(input) {
     reader.readAsText(file);
 }
 
-// Global Listener for Search
 searchInput.addEventListener('input', debounce((e) => {
     const val = e.target.value;
     if(activeId === 'dashboard') performCrossTabSearch(val);
     else renderContent();
 }, 300));
 
-// Init
 window.onload = initAuth;
 </script>
-/* ---------- firebase auth ---------- */
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
   import { getFirestore, collection, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
@@ -1160,7 +1157,3 @@ window.onload = initAuth;
 </script>
 </body>
 </html>
-
-
-
-
