@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=0.5, user-scalable=yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Welfare Branch Diary</title>
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -37,36 +37,18 @@
         html, body {
             height: 100%;
             margin: 0;
-            overflow-x: auto;
-	    overflow-y: auto;
-            box-sizing: border-box;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--content-bg);
             color: var(--text-primary);
+            overflow: hidden; /* Prevent body scroll, handle internally */
         }
-.sidebar {
-    width: 60px;
-}
-@media (min-width: 768px) {
-    .sidebar { width: 300px; }
-}
-        .sidebar {
+
+        /* Sidebar Styles */
+        .sidebar-container {
             background-color: var(--sidebar-bg);
-            color: var(--text-primary);
-            box-sizing: border-box;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            z-index: 100;
-            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.6);
-            transition: width 0.3s ease, transform 0.3s ease;
-            overflow-x: hidden;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .sidebar::-webkit-scrollbar {
-            display: none;
+            border-right: 1px solid var(--border-color);
+            transition: transform 0.3s ease-in-out;
+            z-index: 50;
         }
 
         .dashboard-card {
@@ -92,47 +74,34 @@
         .status-Objection { background-color: #551e1e; color: #f87171; }
         .status-Rejected { background-color: #442a5a; color: #c4b5fd; }
 
-        /* Dim placeholder text */
         input::placeholder, textarea::placeholder {
             color: var(--text-secondary);
             opacity: 0.5;
         }
 
-        /* Modern Minimalistic Scrollbar for Dark Mode */
-        .dark ::-webkit-scrollbar {
+        /* Scrollbar Styling */
+        .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
-        
-        .dark ::-webkit-scrollbar-track {
-            background: #1a1a1a; /* Dark background */
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #555;
             border-radius: 3px;
         }
-        
-        .dark ::-webkit-scrollbar-thumb {
-            background: #555; /* Subtle gray */
-            border-radius: 3px;
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #777;
         }
-        
-        .dark ::-webkit-scrollbar-thumb:hover {
-            background: #777; /* Lighter on hover */
+        .light .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #ccc;
         }
-        
-        /* For Firefox in dark mode */
-        .dark {
-            scrollbar-width: thin;
-            scrollbar-color: #555 #1a1a1a;
-        }
-.main-content-area {
-    margin-left: 60px;
-}
-@media (min-width: 768px) {
-    .main-content-area { margin-left: 300px; }
-}
     </style>
 </head>
-<body class="text-base">
-    <div id="loginPage" class="min-h-screen flex items-center justify-center bg-[var(--content-bg)]">
+<body class="text-base h-screen flex flex-col">
+    
+    <div id="loginPage" class="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--content-bg)]">
         <div class="bg-[var(--card-bg)] p-8 rounded-xl shadow-2xl max-w-md w-full transform transition-all hover:-translate-y-1">
             <h2 class="text-2xl font-bold text-[var(--text-primary)] mb-6 text-center">Login to Welfare Diary</h2>
             <form id="loginForm" class="space-y-4">
@@ -153,72 +122,86 @@
         </div>
     </div>
 
-    <div class="hidden min-h-screen flex flex-col md:flex-row" id="appContent">
-        <div id="customModal" class="fixed inset-0 bg-black bg-opacity-70 z-[1000] hidden flex items-center justify-center p-4">
-            <div class="bg-[var(--card-bg)] p-6 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
-                <h3 id="modalTitle" class="text-xl font-bold mb-3 text-[var(--text-primary)]"></h3>
-                <p id="modalMessage" class="mb-5 text-[var(--text-secondary)]"></p>
-                <div id="modalActions" class="flex justify-end gap-3"></div>
-            </div>
-        </div>
+    <div class="hidden flex h-screen w-full overflow-hidden" id="appContent">
+        
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden" onclick="toggleMenu()"></div>
 
-        <div class="sidebar flex flex-col flex-shrink-0">
+        <aside id="sidebar" class="sidebar-container flex flex-col w-[280px] h-full fixed md:static transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out shrink-0">
             <div class="flex items-center justify-start gap-3 px-4 py-4 border-b border-[var(--border-color)]">
-                <img src="./logo.jpg" alt="Welfare Branch Logo" class="w-10 h-10 rounded-md object-cover shadow-md" onerror="this.onerror=null; this.src='https://via.placeholder.com/40?text=WL'" />
-                <div class="hidden md:block">
-                    <span class="text-[var(--text-primary)] font-semibold text-lg block">Welfare Branch Diary</span>
-                    <span class="text-[var(--text-secondary)] text-sm">Special Protection Unit</span>
+                <img src="./logo.jpg" alt="Logo" class="w-10 h-10 rounded-md object-cover shadow-md" onerror="this.onerror=null; this.src='https://via.placeholder.com/40?text=WL'" />
+                <div>
+                    <span class="text-[var(--text-primary)] font-semibold text-lg block">Welfare Diary</span>
+                    <span class="text-[var(--text-secondary)] text-xs uppercase tracking-wider">Special Protection Unit</span>
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto mt-2">
+            
+            <div class="flex-1 overflow-y-auto custom-scrollbar mt-2">
                 <div class="space-y-1 px-2" id="menu"></div>
             </div>
-            <div class="mt-4 pt-4 border-t border-[var(--border-color)] p-4">
-                <p class="text-xs text-[var(--text-secondary)] text-center hidden md:block mt-2">© 2025 Devoloped by Hashim Ali</p>
-            </div>
-        </div>
-
-        <div class="flex-1 p-4 transition-all main-content-area" id="mainContent">
-            <button id="menuToggle" class="md:hidden fixed top-4 left-4 z-50 p-2 rounded-full bg-[var(--primary-color)] text-white shadow-lg hover:bg-blue-700" aria-label="Toggle menu">
-                <i data-lucide="menu" class="w-6 h-6"></i>
-            </button>
             
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-4" id="topBar">
-                <input type="search" id="search" 
-                    class="w-full md:w-[350px] p-3 rounded-full border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)] 
-                    focus:ring-2 focus:ring-[var(--primary-color)] transition-all duration-300 shadow-xl" 
-                    placeholder="Search employees, cases, or records..." aria-label="Search entries" />
-                
-                <div id="tabActions" class="flex gap-2 hidden"> 
-                    <button id="exportTabXlsx" class="flex items-center gap-1 px-4 py-2 rounded-lg bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600 transition-all" aria-label="Export current tab to Excel">
-                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export Tab (XLS)
+            <div class="mt-auto border-t border-[var(--border-color)] p-4">
+                <p class="text-xs text-[var(--text-secondary)] text-center">© 2025 Developed by Hashim Ali</p>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full w-full relative overflow-hidden bg-[var(--content-bg)]">
+            
+            <div class="md:hidden flex items-center justify-between p-4 border-b border-[var(--border-color)] bg-[var(--card-bg)] shrink-0">
+                <div class="flex items-center gap-3">
+                    <button id="menuToggle" class="p-2 rounded-lg bg-[var(--primary-color)] text-white hover:bg-blue-700">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
                     </button>
+                    <span class="font-semibold text-[var(--text-primary)]">Welfare Diary</span>
                 </div>
-                <div class="flex justify-end items-center space-x-2"> 
-    <div id="notifyContainer" class="relative">
-        <button id="notifyBtn" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600" aria-label="Notifications">
-            <i data-lucide="bell" class="w-5 h-5"></i>
-            <span id="notifyCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-2 hidden">0</span>
-        </button>
-        <div id="notifyDropdown" class="hidden absolute right-0 mt-2 w-80 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
-            <ul id="notifyList" class="divide-y divide-[var(--border-color)]"></ul>
-            <button id="clearNotifs" class="w-full p-2 text-center text-[var(--text-secondary)] hover:bg-[var(--hover-bg)]">Clear All</button>
-        </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6" id="mainScrollArea">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6" id="topBar">
+                    <input type="search" id="search" 
+                        class="w-full md:w-[400px] p-3 rounded-full border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--text-primary)] 
+                        focus:ring-2 focus:ring-[var(--primary-color)] transition-all duration-300 shadow-lg" 
+                        placeholder="Search employees, cases, or records..." aria-label="Search entries" />
+                    
+                    <div class="flex items-center gap-2 justify-end">
+                         <div id="tabActions" class="hidden"> 
+                            <button id="exportTabXlsx" class="flex items-center gap-1 px-3 py-2 rounded-lg bg-gray-700 text-[var(--text-primary)] text-sm hover:bg-gray-600 transition-all">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> <span class="hidden sm:inline">Export Tab</span>
+                            </button>
+                        </div>
+
+                        <div id="notifyContainer" class="relative">
+                            <button id="notifyBtn" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600">
+                                <i data-lucide="bell" class="w-5 h-5"></i>
+                                <span id="notifyCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 hidden">0</span>
+                            </button>
+                            <div id="notifyDropdown" class="hidden absolute right-0 mt-2 w-80 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg shadow-xl z-[60] max-h-96 overflow-y-auto custom-scrollbar">
+                                <ul id="notifyList" class="divide-y divide-[var(--border-color)]"></ul>
+                                <button id="clearNotifs" class="w-full p-2 text-center text-sm text-[var(--text-secondary)] hover:bg-[var(--hover-bg)]">Clear All</button>
+                            </div>
+                        </div>
+
+                        <button id="themeToggle" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600">
+                            <i data-lucide="moon" class="w-5 h-5"></i>
+                        </button>
+
+                        <button id="logoutBtn" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600">
+                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="searchDedicatedResults" class="flex flex-col gap-4 hidden"></div>
+                <div id="contentArea" class="flex flex-col gap-6 pb-10"></div>
+            </div>
+        </main>
     </div>
 
-    <button id="themeToggle" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600" aria-label="Toggle theme">
-        <i data-lucide="moon" class="w-5 h-5"></i>
-    </button>
-
-    <button id="logoutBtn" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600" aria-label="Logout">
-        <i data-lucide="log-out" class="w-5 h-5"></i>
-    </button>
-</div>
-
-            
-            <div id="searchDedicatedResults" class="flex flex-col gap-4 max-w-full hidden"></div>
-            
-            <div id="contentArea" class="flex flex-col gap-4 max-w-full"></div>
+    <div id="customModal" class="fixed inset-0 bg-black bg-opacity-70 z-[1000] hidden flex items-center justify-center p-4">
+        <div class="bg-[var(--card-bg)] p-6 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+            <h3 id="modalTitle" class="text-xl font-bold mb-3 text-[var(--text-primary)]"></h3>
+            <p id="modalMessage" class="mb-5 text-[var(--text-secondary)]"></p>
+            <div id="modalActions" class="flex justify-end gap-3"></div>
         </div>
     </div>
 
@@ -348,25 +331,24 @@ const SECTIONS = [
     { id:'settings', title:'Settings', icon: 'settings'}
 ];
 
-const STORAGE_ROOT = 'welfare_multi_v3';
-// NEW GLOBAL STATE VARIABLES
+// STATE & VARIABLES
 let state = {}, activeId = 'dashboard', subActiveId = null, filterStatus = null, selectedIndex = null;
-let isSearchMode = false; // Flag to track if the dedicated search results view is active
+let isSearchMode = false;
 let currentTheme = localStorage.getItem('theme') || 'dark';
 let currentFontSize = localStorage.getItem('fontSize') || 'text-base';
 let isMenuOpen = false;
 let notifications = [];
 
-/* ---------- Global Elements ---------- */
-const sidebarEl = document.querySelector('.sidebar');
-const mainContentEl = document.getElementById('mainContent');
+// DOM ELEMENTS
+const sidebarEl = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
 const menuToggleEl = document.getElementById('menuToggle');
 const menuEl = document.getElementById('menu');
 const contentArea = document.getElementById('contentArea');
-const searchDedicatedResults = document.getElementById('searchDedicatedResults'); // NEW Element
+const searchDedicatedResults = document.getElementById('searchDedicatedResults');
 const topBar = document.getElementById('topBar');
 const searchInput = document.getElementById('search');
-const tabActions = document.getElementById('tabActions'); // NEW Element
+const tabActions = document.getElementById('tabActions');
 const loginPage = document.getElementById('loginPage');
 const appContent = document.getElementById('appContent');
 const loginForm = document.getElementById('loginForm');
@@ -378,6 +360,11 @@ const notifyList = document.getElementById('notifyList');
 const notifyCount = document.getElementById('notifyCount');
 const clearNotifs = document.getElementById('clearNotifs');
 const themeToggle = document.getElementById('themeToggle');
+const modalEl = document.getElementById('customModal');
+const modalTitleEl = document.getElementById('modalTitle');
+const modalMessageEl = document.getElementById('modalMessage');
+const modalActionsEl = document.getElementById('modalActions');
+const modalContentEl = document.getElementById('modalContent');
 
 /* ---------- Utility Functions ---------- */
 function debounce(func, wait) {
@@ -389,15 +376,7 @@ function debounce(func, wait) {
 }
 
 function initializeIcons() {
-    if (typeof lucide === 'undefined') {
-        console.warn('Lucide library not loaded. Icons will not render.');
-        return;
-    }
-    try {
-        lucide.createIcons();
-    } catch (e) {
-        console.error('Failed to initialize Lucide icons:', e);
-    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function todayISO() {
@@ -412,9 +391,8 @@ function dateDiff(date1, date2) {
     return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
 }
 
-// Beep function
-const myAudioContext = new AudioContext();
 function beep(duration = 200, frequency = 440, volume = 100) {
+    const myAudioContext = new (window.AudioContext || window.webkitAudioContext)();
     return new Promise((resolve) => {
         let oscillatorNode = myAudioContext.createOscillator();
         let gainNode = myAudioContext.createGain();
@@ -429,18 +407,15 @@ function beep(duration = 200, frequency = 440, volume = 100) {
     });
 }
 
+/* ---------- State Management ---------- */
 async function loadState() {
     try {
-        if (typeof db !== 'undefined' && typeof doc !== 'undefined' && typeof collection !== 'undefined' && typeof getDoc !== 'undefined') {
+        if (typeof db !== 'undefined' && typeof doc !== 'undefined') {
             const docRef = doc(collection(db, 'app_states'), 'default');
             const snap = await getDoc(docRef);
-            if (snap.exists()) {
-                state = snap.data();
-            } else {
-                state = {};
-            }
+            if (snap.exists()) state = snap.data();
+            else state = {};
         } else {
-            console.warn("Firebase not initialized. Using empty state.");
             state = {};
         }
     } catch (e) {
@@ -465,34 +440,33 @@ async function loadState() {
 function saveState() {
     state.notifications = notifications;
     try {
-        if (typeof db !== 'undefined' && typeof doc !== 'undefined' && typeof collection !== 'undefined' && typeof setDoc !== 'undefined') {
+        if (typeof db !== 'undefined' && typeof doc !== 'undefined') {
             const docRef = doc(collection(db, 'app_states'), 'default');
             setDoc(docRef, state);
-        } else {
-            console.warn("Firebase not initialized. State changes will not be saved.");
         }
     } catch (e) {
         console.error("Error saving state:", e);
     }
 }
 
-/* ---------- Login & Logout Logic ---------- */
+/* ---------- Auth ---------- */
 async function initAuth() {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             loginPage.classList.add('hidden');
             appContent.classList.remove('hidden');
+            appContent.classList.add('flex'); // Enable Flex layout
             await loadState();
             buildMenu();
             renderContent();
-            applyLayout();
             requestNotificationPermission();
-            setInterval(checkNotifications, 60000); // Check every minute
-            checkNotifications(); // Initial check
+            setInterval(checkNotifications, 60000);
+            checkNotifications();
             initNotifyEvents();
         } else {
             loginPage.classList.remove('hidden');
             appContent.classList.add('hidden');
+            appContent.classList.remove('flex');
         }
     });
 
@@ -500,7 +474,6 @@ async function initAuth() {
         e.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-
         try {
             await signInWithEmailAndPassword(auth, email, password);
         } catch (error) {
@@ -515,59 +488,62 @@ async function initAuth() {
         if (resetEmail) {
             try {
                 await sendPasswordResetEmail(auth, resetEmail);
-                alert('Password reset email sent. Check your inbox.');
+                alert('Password reset email sent.');
             } catch (error) {
-                alert('Failed to send reset email. Please try again.');
+                alert('Failed to send reset email.');
             }
         }
     });
 
     logoutBtn.addEventListener('click', async () => {
-        try {
-            await signOut(auth);
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-            loginError.classList.add('hidden');
-        } catch (error) {
-            console.error('Logout failed:', error);
-        }
+        await signOut(auth);
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+        loginError.classList.add('hidden');
     });
 }
 
-/* ---------- Notification System ---------- */
+/* ---------- UI Logic & Responsive Layout ---------- */
+function toggleMenu() {
+    isMenuOpen = !isMenuOpen;
+    if (isMenuOpen) {
+        sidebarEl.classList.remove('-translate-x-full');
+        sidebarOverlay.classList.remove('hidden');
+    } else {
+        sidebarEl.classList.add('-translate-x-full');
+        sidebarOverlay.classList.add('hidden');
+    }
+}
+
+// Close menu on item click if mobile
+function closeMobileMenu() {
+    if (window.innerWidth < 768) {
+        isMenuOpen = false;
+        sidebarEl.classList.add('-translate-x-full');
+        sidebarOverlay.classList.add('hidden');
+    }
+}
+
+/* ---------- Notifications ---------- */
 function requestNotificationPermission() {
-    if (!("Notification" in window)) return;
-    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
         Notification.requestPermission();
     }
 }
 
 function addNotification(message, sectionKey, recordIndex) {
-    const newNotif = {
-        id: Date.now(),
-        message,
-        sectionKey,
-        recordIndex,
-        createdAt: todayISO()
-    };
-    notifications.unshift(newNotif); // Add to front
+    const newNotif = { id: Date.now(), message, sectionKey, recordIndex, createdAt: todayISO() };
+    notifications.unshift(newNotif);
     saveState();
     updateNotifyCount();
     renderNotifications();
-    showDesktopNotification(message);
+    if (Notification.permission === "granted") new Notification('Welfare Diary', { body: message });
     beep();
 }
 
-function showDesktopNotification(message) {
-    if (Notification.permission === "granted") {
-        new Notification('Welfare Diary Notification', { body: message });
-    }
-}
-
 function updateNotifyCount() {
-    const count = notifications.length;
-    notifyCount.textContent = count;
-    notifyCount.classList.toggle('hidden', count === 0);
+    notifyCount.textContent = notifications.length;
+    notifyCount.classList.toggle('hidden', notifications.length === 0);
 }
 
 function renderNotifications() {
@@ -576,14 +552,16 @@ function renderNotifications() {
         const li = document.createElement('li');
         li.className = 'p-3 hover:bg-[var(--hover-bg)] cursor-pointer';
         li.innerHTML = `
-            <div class="flex justify-between">
-                <span>${notif.message}</span>
-                <button data-notif-id="${notif.id}" class="text-red-500 hover:text-red-700" aria-label="Delete notification"><i data-lucide="x" class="w-4 h-4"></i></button>
+            <div class="flex justify-between items-start gap-2">
+                <span class="text-sm">${notif.message}</span>
+                <button data-notif-id="${notif.id}" class="text-red-500 hover:text-red-700 p-1"><i data-lucide="x" class="w-3 h-3"></i></button>
             </div>
         `;
-        li.addEventListener('click', () => {
-            selectRowAndNavigate(notif.sectionKey, notif.recordIndex);
-            notifyDropdown.classList.add('hidden');
+        li.addEventListener('click', (e) => {
+            if(!e.target.closest('button')) {
+                selectRowAndNavigate(notif.sectionKey, notif.recordIndex);
+                notifyDropdown.classList.add('hidden');
+            }
         });
         notifyList.appendChild(li);
     });
@@ -593,23 +571,19 @@ function renderNotifications() {
 function initNotifyEvents() {
     notifyBtn.addEventListener('click', () => {
         notifyDropdown.classList.toggle('hidden');
-        if (!notifyDropdown.classList.contains('hidden')) {
-            renderNotifications();
-        }
+        if (!notifyDropdown.classList.contains('hidden')) renderNotifications();
     });
-
     notifyList.addEventListener('click', (e) => {
         const delBtn = e.target.closest('button[data-notif-id]');
         if (delBtn) {
+            e.stopPropagation();
             const id = Number(delBtn.dataset.notifId);
             notifications = notifications.filter(n => n.id !== id);
             saveState();
             renderNotifications();
             updateNotifyCount();
-            e.stopPropagation();
         }
     });
-
     clearNotifs.addEventListener('click', () => {
         notifications = [];
         saveState();
@@ -621,93 +595,47 @@ function initNotifyEvents() {
 function checkNotifications() {
     const today = todayISO();
     const allSections = getAllSectionsWithKey();
-    const lastPendingCheck = localStorage.getItem('lastPendingCheck') || '';
-    const isNewDay = lastPendingCheck !== today;
+    const lastCheck = localStorage.getItem('lastPendingCheck') || '';
+    const isNewDay = lastCheck !== today;
 
     allSections.forEach(sec => {
         const arr = state[sec.key] || [];
         arr.forEach((rec, idx) => {
-            if (rec.status === 'Pending') {
-                if (isNewDay) {
-                    addNotification(`Letter pending: ${rec.applicantName || rec.subject || 'Entry'} in ${sec.title}`, sec.key, idx);
-                }
+            if (isNewDay && rec.status === 'Pending') {
+                addNotification(`Letter pending: ${rec.applicantName || rec.subject || 'Entry'} in ${sec.title}`, sec.key, idx);
             }
-
             if (sec.fields.some(f => f.k === 'missing1')) {
-                if (rec.missing1 && !rec.reminder1 && dateDiff(rec.missing1, today) >= 7 && !rec.documentsReceived && rec.status === 'Pending') {
-                    addNotification(`Time for Reminder 1 on ${rec.applicantName || rec.subject || 'Entry'} in ${sec.title}`, sec.key, idx);
-                }
-                if (rec.reminder1 && !rec.reminder2 && dateDiff(rec.reminder1, today) >= 7 && !rec.documentsReceived && rec.status === 'Pending') {
-                    addNotification(`Time for Reminder 2 on ${rec.applicantName || rec.subject || 'Entry'} in ${sec.title}`, sec.key, idx);
-                }
-                if (rec.reminder2 && !rec.reminder3 && dateDiff(rec.reminder2, today) >= 7 && !rec.documentsReceived && rec.status === 'Pending') {
-                    addNotification(`Time for Reminder 3 on ${rec.applicantName || rec.subject || 'Entry'} in ${sec.title}`, sec.key, idx);
-                }
+                const checkReminder = (dateField, nextDateField, msg) => {
+                    if (rec[dateField] && !rec[nextDateField] && dateDiff(rec[dateField], today) >= 7 && !rec.documentsReceived && rec.status === 'Pending') {
+                        addNotification(msg, sec.key, idx);
+                    }
+                };
+                checkReminder('missing1', 'reminder1', `Time for Reminder 1: ${rec.applicantName}`);
+                checkReminder('reminder1', 'reminder2', `Time for Reminder 2: ${rec.applicantName}`);
+                checkReminder('reminder2', 'reminder3', `Time for Reminder 3: ${rec.applicantName}`);
             }
         });
     });
-
-    if (isNewDay) {
-        localStorage.setItem('lastPendingCheck', today);
-    }
+    if (isNewDay) localStorage.setItem('lastPendingCheck', today);
 }
 
-/* ---------- Menu Toggle Logic ---------- */
-const DESKTOP_BREAKPOINT = 768;
-
-function applyLayout() {
-    const isDesktop = window.innerWidth >= DESKTOP_BREAKPOINT;
-    if (isDesktop) {
-        sidebarEl.classList.remove('translate-x-[-100%]');
-        sidebarEl.style.width = '300px';
-    } else {
-        sidebarEl.style.width = isMenuOpen ? '300px' : '60px';
-        sidebarEl.classList.toggle('translate-x-[-100%]', !isMenuOpen);
-    }
-    mainContentEl.style.marginLeft = isDesktop ? '300px' : (isMenuOpen ? '300px' : '60px');
-    menuToggleEl.classList.toggle('hidden', isDesktop);
-    updateMenuButtonIcon();
-}
-
-function updateMenuButtonIcon() {
-    const iconName = isMenuOpen && window.innerWidth < DESKTOP_BREAKPOINT ? 'x' : 'menu';
-    menuToggleEl.innerHTML = `<i data-lucide="${iconName}" class="w-6 h-6 text-[var(--text-primary)]"></i>`;
-    initializeIcons();
-}
-
-function toggleMenu() {
-    if (window.innerWidth < DESKTOP_BREAKPOINT) {
-        isMenuOpen = !isMenuOpen;
-        applyLayout();
-    }
-}
-
-const modalEl = document.getElementById('customModal');
-const modalTitleEl = document.getElementById('modalTitle');
-const modalMessageEl = document.getElementById('modalMessage');
-const modalActionsEl = document.getElementById('modalActions');
-const modalContentEl = document.getElementById('modalContent');
-
+/* ---------- Theme & Modal ---------- */
 function showModal(title, message, options = {}) {
     return new Promise(resolve => {
         modalTitleEl.textContent = title;
         modalMessageEl.textContent = message;
         modalActionsEl.innerHTML = '';
-
         modalEl.classList.remove('hidden');
         modalEl.classList.add('flex');
         setTimeout(() => {
             modalContentEl.classList.remove('scale-95', 'opacity-0');
             modalContentEl.classList.add('scale-100', 'opacity-100');
         }, 10);
-
         const actions = options.actions || [{ text: 'OK', value: true, style: 'bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700' }];
-
         actions.forEach(action => {
             const btn = document.createElement('button');
             btn.textContent = action.text;
             btn.className = `px-4 py-2 rounded-lg text-sm font-medium transition-all ${action.style}`;
-            btn.setAttribute('aria-label', action.text);
             btn.addEventListener('click', () => {
                 modalContentEl.classList.remove('scale-100', 'opacity-100');
                 modalContentEl.classList.add('scale-95', 'opacity-0');
@@ -727,10 +655,6 @@ function applyTheme(theme) {
     localStorage.setItem('theme', theme);
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(theme);
-    updateThemeIcon();
-}
-
-function updateThemeIcon() {
     themeToggle.innerHTML = currentTheme === 'dark' ? `<i data-lucide="moon" class="w-5 h-5"></i>` : `<i data-lucide="sun" class="w-5 h-5"></i>`;
     initializeIcons();
 }
@@ -738,30 +662,23 @@ function updateThemeIcon() {
 function applyFontSize(size) {
     currentFontSize = size;
     localStorage.setItem('fontSize', size);
-    document.body.className = size;
+    document.body.className = `${size} h-screen flex flex-col`;
 }
 
+/* ---------- Rendering Logic ---------- */
 function buildMenu() {
     menuEl.innerHTML = '';
     SECTIONS.forEach(s => {
         const b = document.createElement('button');
-        b.className = `flex items-center gap-3 w-full text-left bg-none border-none text-[#ccc] p-3 rounded-lg hover:bg-[#2c2c2c] hover:text-white transition-all font-medium ${s.id === activeId ? 'bg-[#3b3b3b] text-white' : ''}`;
-        b.dataset.id = s.id;
-        b.setAttribute('aria-label', s.title);
-        b.innerHTML = `
-            <i data-lucide="${s.icon}" class="w-5 h-5"></i>
-            <span class="hidden md:inline">${s.title}</span>
-        `;
+        b.className = `flex items-center gap-3 w-full text-left bg-transparent text-[var(--text-secondary)] p-3 rounded-lg hover:bg-[#2c2c2c] hover:text-white transition-all font-medium ${s.id === activeId ? 'bg-[#3b3b3b] text-white' : ''}`;
+        b.innerHTML = `<i data-lucide="${s.icon}" class="w-5 h-5"></i><span>${s.title}</span>`;
         b.addEventListener('click', () => {
             activeId = s.id;
             subActiveId = null;
             filterStatus = null;
             buildMenu();
             renderContent();
-            if (window.innerWidth < DESKTOP_BREAKPOINT) setTimeout(() => {
-                isMenuOpen = false;
-                applyLayout();
-            }, 100);
+            closeMobileMenu();
         });
         menuEl.appendChild(b);
     });
@@ -770,10 +687,8 @@ function buildMenu() {
 
 function renderContent() {
     const isDataTab = activeId !== 'dashboard' && activeId !== 'settings';
-    
-    searchInput.classList.toggle('md:w-[350px]', !isDataTab); 
+    searchInput.classList.toggle('md:w-[400px]', !isDataTab); 
     searchInput.classList.toggle('w-full', isDataTab);
-    
     tabActions.classList.toggle('hidden', !isDataTab || isSearchMode);
 
     if (isSearchMode) {
@@ -781,15 +696,12 @@ function renderContent() {
         searchDedicatedResults.classList.remove('hidden');
         return;
     }
-
     contentArea.classList.remove('hidden');
     searchDedicatedResults.classList.add('hidden');
     
-    if (activeId === 'dashboard') {
-        renderDashboard();
-    } else if (activeId === 'settings') {
-        renderSettings();
-    } else if (activeId === 'wmc') {
+    if (activeId === 'dashboard') renderDashboard();
+    else if (activeId === 'settings') renderSettings();
+    else if (activeId === 'wmc') {
         if (subActiveId) {
             const subSec = SECTIONS.find(s => s.id === 'wmc').subSections.find(s => s.id === subActiveId);
             renderSection(subSec);
@@ -803,9 +715,7 @@ function renderContent() {
 
 function getCurrentSec() {
     let sec = SECTIONS.find(s => s.id === activeId);
-    if (activeId === 'wmc' && subActiveId) {
-        sec = SECTIONS.find(s => s.id === 'wmc').subSections.find(s => s.id === subActiveId);
-    }
+    if (activeId === 'wmc' && subActiveId) sec = SECTIONS.find(s => s.id === 'wmc').subSections.find(s => s.id === subActiveId);
     return sec;
 }
 
@@ -821,11 +731,7 @@ function setSubActiveTabWithFilter(subId, status) {
     renderContent();
 }
 
-window.clearFilter = clearFilter;
-function clearFilter() {
-    filterStatus = null;
-    renderContent();
-}
+window.clearFilter = () => { filterStatus = null; renderContent(); };
 
 function calculateDashboardData(sections) {
     const data = {};
@@ -847,877 +753,396 @@ function calculateDashboardData(sections) {
 }
 
 function renderDashboard() {
-    const leafSections = SECTIONS.filter(s => s.key); // Only top-level sections with keys
+    const leafSections = SECTIONS.filter(s => s.key);
     const data = calculateDashboardData(leafSections);
     contentArea.innerHTML = `
         <h2 class="text-3xl font-semibold text-[var(--text-primary)] mb-4">Welfare Status Dashboard</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="dashboardContainer">
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="dashboardContainer"></div>
     `;
     const container = document.getElementById('dashboardContainer');
     leafSections.forEach(sec => {
-        const sectionData = data[sec.id];
-        const sectionHtml = `
-            <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg overflow-hidden">
-                <div class="flex justify-between items-center p-3 bg-[#222222] border-b border-[var(--border-color)] cursor-pointer dashboard-card" onclick="setActiveTab('${sec.id}')">
-                    <div class="break-words">
-                        <h3 class="text-xl font-semibold text-[var(--text-primary)]">${sec.title}</h3>
-                        <p class="text-sm text-[var(--text-secondary)] mt-2">View and manage all entries for this section.</p>
-                    </div>
-                    <i data-lucide="${sec.icon}" class="w-6 h-6 text-[var(--primary-color)] opacity-75"></i>
+        const d = data[sec.id];
+        container.insertAdjacentHTML('beforeend', `
+            <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg overflow-hidden flex flex-col h-full">
+                <div class="flex justify-between items-center p-3 bg-[#222222] border-b border-[var(--border-color)] cursor-pointer dashboard-card" onclick="activeId='${sec.id}';renderContent()">
+                    <div><h3 class="text-lg font-bold text-[var(--text-primary)]">${sec.title}</h3></div>
+                    <i data-lucide="${sec.icon}" class="w-5 h-5 text-[var(--primary-color)]"></i>
                 </div>
-                <div class="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
-                    ${renderDashboardCard(sec.id, 'Pending', sectionData.pending, 'clock', 'border-yellow-500 text-yellow-500')}
-                    ${renderDashboardCard(sec.id, 'Sent to Higher Office', sectionData.sent, 'send', 'border-blue-500 text-blue-500')}
-                    ${renderDashboardCard(sec.id, 'Completed (Final Status)', sectionData.completed, 'check-circle', 'border-green-500 text-green-500')}
-                    ${renderDashboardCard(sec.id, 'Approved / Rejected', sectionData.approvedRejected, 'alert-triangle', 'border-red-500 text-red-500')}
+                <div class="p-3 grid grid-cols-2 gap-2 flex-1 content-start">
+                    ${renderDashboardCard(sec.id, 'Pending', d.pending, 'clock', 'text-yellow-500 border-yellow-500')}
+                    ${renderDashboardCard(sec.id, 'Sent HQ', d.sent, 'send', 'text-blue-500 border-blue-500')}
+                    ${renderDashboardCard(sec.id, 'Completed', d.completed, 'check-circle', 'text-green-500 border-green-500')}
+                    ${renderDashboardCard(sec.id, 'Appr/Rej', d.approvedRejected, 'alert-triangle', 'text-red-500 border-red-500')}
                 </div>
             </div>
-        `;
-        container.insertAdjacentHTML('beforeend', sectionHtml);
-        animateCounter(`count-${sec.id}-Pending`, sectionData.pending);
-        animateCounter(`count-${sec.id}-Sent to Higher Office`, sectionData.sent);
-        animateCounter(`count-${sec.id}-Completed (Final Status)`, sectionData.completed);
-        animateCounter(`count-${sec.id}-Approved / Rejected`, sectionData.approvedRejected);
+        `);
     });
     initializeIcons();
+}
+
+function renderDashboardCard(secId, title, count, icon, classes) {
+    return `
+        <div class="p-2 rounded border border-[var(--border-color)] bg-[#262626] flex flex-col items-center justify-center text-center">
+            <span class="text-2xl font-bold text-[var(--text-primary)]">${count}</span>
+            <span class="text-xs text-[var(--text-secondary)] mt-1">${title}</span>
+        </div>
+    `;
 }
 
 function renderWMCSubDashboard() {
     const subSecs = SECTIONS.find(s => s.id === 'wmc').subSections;
     const data = calculateDashboardData(subSecs);
     contentArea.innerHTML = `
-        <h2 class="text-3xl font-semibold text-[var(--text-primary)] mb-4">Welfare Management Committee (WMC)</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="dashboardContainer">
-        </div>
-        <div class="mt-4">
-            <h3 class="text-2xl font-semibold text-[var(--text-primary)] mb-4">Fund Allocation Overview</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-[var(--text-primary)] mb-2">Sanctioned Amounts by Section</h4>
-                    <canvas id="sanctionedChart" class="w-full" style="max-height: 200px;"></canvas>
-                </div>
-                <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-[var(--text-primary)] mb-2">Total Funds</h4>
-                    <canvas id="fundsChart" class="w-full" style="max-height: 200px;"></canvas>
-                </div>
+        <h2 class="text-3xl font-semibold text-[var(--text-primary)] mb-4">WMC Dashboard</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="wmcContainer"></div>
+        <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-[var(--card-bg)] p-4 rounded-lg border border-[var(--border-color)]">
+                <h4 class="text-lg font-bold mb-2">Sanctioned Amounts</h4>
+                <canvas id="sanctionedChart" style="max-height: 250px;"></canvas>
+            </div>
+            <div class="bg-[var(--card-bg)] p-4 rounded-lg border border-[var(--border-color)]">
+                <h4 class="text-lg font-bold mb-2">Funds Overview</h4>
+                <canvas id="fundsChart" style="max-height: 250px;"></canvas>
             </div>
         </div>
-        <div class="mt-4" id="addFundsCard"></div>
-        <div class="mt-4" id="fundSummary"></div>
+        <div id="fundSummary" class="mt-4 p-4 bg-[var(--card-bg)] rounded-lg border border-[var(--border-color)]"></div>
     `;
-    const container = document.getElementById('dashboardContainer');
-    const addFundsContainer = document.getElementById('addFundsCard');
+    const container = document.getElementById('wmcContainer');
     subSecs.forEach(sec => {
-        const sectionData = data[sec.id];
-        let sectionHtml;
+        const d = data[sec.id];
         if (sec.id === 'wmc_funds') {
             const totalFunds = state[sec.key].reduce((sum, r) => sum + (Number(r.chequeAmount) || 0), 0);
-            sectionHtml = `
-                <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg overflow-hidden col-span-1 sm:col-span-2 lg:col-span-3">
-                    <div class="flex justify-between items-center p-3 bg-[#222222] border-b border-[var(--border-color)] cursor-pointer dashboard-card" onclick="setSubActiveTab('${sec.id}')">
-                        <div class="break-words">
-                            <h3 class="text-xl font-semibold text-[var(--text-primary)]">${sec.title}</h3>
-                            <p class="text-sm text-[var(--text-secondary)] mt-2">Manage added funds.</p>
-                        </div>
-                        <i data-lucide="${sec.icon}" class="w-6 h-6 text-[var(--primary-color)] opacity-75"></i>
-                    </div>
-                    <div class="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
-                        ${renderDashboardCard(sec.id, 'Total Entries', sectionData.total, 'file-text', 'border-blue-500 text-blue-500')}
-                        ${renderDashboardCard(sec.id, 'Total Funds', totalFunds, 'dollar-sign', 'border-green-500 text-green-500')}
-                    </div>
+            container.insertAdjacentHTML('beforeend', `
+                <div class="bg-[var(--card-bg)] shadow border border-[var(--border-color)] rounded-lg">
+                     <div class="p-3 bg-[#222222] border-b border-[var(--border-color)] cursor-pointer flex justify-between" onclick="setSubActiveTab('${sec.id}')">
+                        <h3 class="font-bold">${sec.title}</h3><i data-lucide="${sec.icon}" class="w-5"></i>
+                     </div>
+                     <div class="p-3 grid grid-cols-2 gap-3">
+                        ${renderDashboardCard(sec.id, 'Entries', d.total, 'file-text', '')}
+                        ${renderDashboardCard(sec.id, 'Total Funds', new Intl.NumberFormat().format(totalFunds), 'dollar-sign', '')}
+                     </div>
                 </div>
-            `;
-            addFundsContainer.insertAdjacentHTML('beforeend', sectionHtml);
-            animateCounter(`count-${sec.id}-Total Entries`, sectionData.total);
-            animateCounter(`count-${sec.id}-Total Funds`, totalFunds);
+            `);
         } else {
-            sectionHtml = `
-                <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg overflow-hidden">
-                    <div class="flex justify-between items-center p-3 bg-[#222222] border-b border-[var(--border-color)] cursor-pointer dashboard-card" onclick="setSubActiveTab('${sec.id}')">
-                        <div class="break-words">
-                            <h3 class="text-xl font-semibold text-[var(--text-primary)]">${sec.title}</h3>
-                            <p class="text-sm text-[var(--text-secondary)] mt-2">View and manage all entries for this section.</p>
-                        </div>
-                        <i data-lucide="${sec.icon}" class="w-6 h-6 text-[var(--primary-color)] opacity-75"></i>
+            container.insertAdjacentHTML('beforeend', `
+                <div class="bg-[var(--card-bg)] shadow border border-[var(--border-color)] rounded-lg">
+                    <div class="p-3 bg-[#222222] border-b border-[var(--border-color)] cursor-pointer flex justify-between" onclick="setSubActiveTab('${sec.id}')">
+                        <h3 class="font-bold">${sec.title}</h3><i data-lucide="${sec.icon}" class="w-5"></i>
                     </div>
-                    <div class="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
-                        ${renderDashboardCard(sec.id, 'Pending', sectionData.pending, 'clock', 'border-yellow-500 text-yellow-500', 'Pending')}
-                        ${renderDashboardCard(sec.id, 'Approved', sectionData.approved, 'check-circle', 'border-green-500 text-green-500', 'Approved')}
-                        ${renderDashboardCard(sec.id, 'Rejected', sectionData.rejected, 'x-circle', 'border-red-500 text-red-500', 'Rejected')}
+                    <div class="p-3 grid grid-cols-3 gap-2">
+                        <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-yellow-900" onclick="setSubActiveTabWithFilter('${sec.id}','Pending')">
+                            <div class="text-xl font-bold text-yellow-500">${d.pending}</div><div class="text-xs">Pending</div>
+                        </div>
+                        <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-green-900" onclick="setSubActiveTabWithFilter('${sec.id}','Approved')">
+                            <div class="text-xl font-bold text-green-500">${d.approved}</div><div class="text-xs">Approved</div>
+                        </div>
+                        <div class="bg-[#262626] p-2 rounded text-center cursor-pointer border border-red-900" onclick="setSubActiveTabWithFilter('${sec.id}','Rejected')">
+                            <div class="text-xl font-bold text-red-500">${d.rejected}</div><div class="text-xs">Rejected</div>
+                        </div>
                     </div>
                 </div>
-            `;
-            container.insertAdjacentHTML('beforeend', sectionHtml);
-            animateCounter(`count-${sec.id}-Pending`, sectionData.pending);
-            animateCounter(`count-${sec.id}-Approved`, sectionData.approved);
-            animateCounter(`count-${sec.id}-Rejected`, sectionData.rejected);
+            `);
         }
     });
     initializeIcons();
 
-    const sanctionSubSecs = subSecs.filter(sec => sec.id !== 'wmc_funds');
-    const labels = sanctionSubSecs.map(sec => sec.title);
-    const sanctionedAmounts = sanctionSubSecs.map(sec => data[sec.id].totalSanctioned);
-    const ctx = document.getElementById('sanctionedChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'pie',
+    // Charts
+    const sanctionSubSecs = subSecs.filter(s => s.id !== 'wmc_funds');
+    const sancAmts = sanctionSubSecs.map(s => data[s.id].totalSanctioned);
+    new Chart(document.getElementById('sanctionedChart'), {
+        type: 'doughnut',
         data: {
-            labels: labels.map((label, i) => `${label}: ${new Intl.NumberFormat('en-US').format(sanctionedAmounts[i])} PKR`),
-            datasets: [{
-                data: sanctionedAmounts,
-                backgroundColor: ['#34D399', '#FBBF24', '#F87171'],
-                borderColor: ['#2ECC71', '#F59E0B', '#EF4444'],
-                borderWidth: 1
-            }]
+            labels: sanctionSubSecs.map(s => s.title),
+            datasets: [{ data: sancAmts, backgroundColor: ['#34D399', '#FBBF24', '#F87171'] }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: {
-                        color: '#EDEDED',
-                        font: { size: 10, weight: 'bold' },
-                        boxWidth: 20,
-                        boxHeight: 20,
-                        padding: 15,
-                        generateLabels: (chart) => {
-                            const data = chart.data;
-                            return data.labels.map((label, i) => ({
-                                text: label,
-                                fillStyle: data.datasets[0].backgroundColor[i],
-                                strokeStyle: data.datasets[0].borderColor[i],
-                                lineWidth: 1
-                            }));
-                        }
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'var(--card-bg)',
-                    titleColor: '#EDEDED',
-                    bodyColor: '#EDEDED',
-                    borderColor: 'var(--border-color)',
-                    borderWidth: 1
-                }
-            }
-        }
+        options: { plugins: { legend: { position:'right', labels:{ color:'var(--text-primary)' } } } }
     });
 
-    const totalSanctionedOverall = sanctionSubSecs.reduce((sum, sec) => sum + data[sec.id].totalSanctioned, 0);
-    const totalFunds = state['welfare_wmc_funds'].reduce((sum, r) => sum + (Number(r.chequeAmount) || 0), 0);
-    const remaining = totalFunds - totalSanctionedOverall;
-    const fundsCtx = document.getElementById('fundsChart').getContext('2d');
-    new Chart(fundsCtx, {
+    const totalSanctioned = sancAmts.reduce((a,b)=>a+b,0);
+    const totalFunds = state['welfare_wmc_funds'].reduce((sum,r)=>sum+(Number(r.chequeAmount)||0),0);
+    const remaining = totalFunds - totalSanctioned;
+    
+    new Chart(document.getElementById('fundsChart'), {
         type: 'pie',
         data: {
-            labels: [
-                `Sanctioned: ${new Intl.NumberFormat('en-US').format(totalSanctionedOverall)} PKR`,
-                `Remaining: ${new Intl.NumberFormat('en-US').format(remaining)} PKR`
-            ],
-            datasets: [{
-                data: [totalSanctionedOverall, remaining],
-                backgroundColor: ['#EF4444', '#10B981'],
-                borderColor: ['#DC2626', '#059669'],
-                borderWidth: 1
-            }]
+            labels: ['Used', 'Remaining'],
+            datasets: [{ data: [totalSanctioned, remaining], backgroundColor: ['#EF4444', '#10B981'] }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: {
-                        color: 'var(--text-primary)',
-                        font: { size: 10, weight: 'bold' },
-                        boxWidth: 20,
-                        boxHeight: 20,
-                        padding: 15
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'var(--card-bg)',
-                    titleColor: 'var(--text-primary)',
-                    bodyColor: 'var(--text-primary)',
-                    borderColor: 'var(--border-color)',
-                    borderWidth: 1
-                }
-            }
-        }
+        options: { plugins: { legend: { position:'right', labels:{ color:'var(--text-primary)' } } } }
     });
 
-    const fundSummaryHtml = `
-        <h3 class="text-2xl font-semibold text-[var(--text-primary)] mb-4">Fund Summary</h3>
-        <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
-            <p class="text-lg text-[var(--text-primary)] mb-2">Total Funds Added: ${new Intl.NumberFormat('en-US').format(totalFunds)} PKR</p>
-            <p class="text-lg text-[var(--text-primary)] mb-2">Total Sanctioned: ${new Intl.NumberFormat('en-US').format(totalSanctionedOverall)} PKR</p>
-            <p class="text-lg text-[var(--text-primary)]">Remaining Funds: ${new Intl.NumberFormat('en-US').format(remaining)} PKR</p>
+    document.getElementById('fundSummary').innerHTML = `
+        <div class="flex flex-wrap gap-6 justify-between items-center text-[var(--text-primary)]">
+            <span class="text-lg font-semibold">Total Funds: <span class="text-blue-400">${new Intl.NumberFormat().format(totalFunds)}</span></span>
+            <span class="text-lg font-semibold">Sanctioned: <span class="text-red-400">${new Intl.NumberFormat().format(totalSanctioned)}</span></span>
+            <span class="text-lg font-semibold">Available: <span class="text-green-400">${new Intl.NumberFormat().format(remaining)}</span></span>
         </div>
     `;
-    document.getElementById('fundSummary').innerHTML = fundSummaryHtml;
-}
-
-function renderDashboardCard(secId, title, count, icon, colorClasses, status = null) {
-    const onclick = status ? `onclick="setSubActiveTabWithFilter('${secId}', '${status}')"` : `onclick="setSubActiveTab('${secId}')"`
-    return `
-        <div class="p-3 rounded border border-[var(--border-color)] bg-[#222222] shadow-md hover:bg-[var(--hover-bg)] transition-transform duration-200 cursor-pointer dashboard-card" ${onclick}>
-            <div class="flex justify-between items-start">
-                <i data-lucide="${icon}" class="w-5 h-5 ${colorClasses}"></i>
-                <span class="text-3xl font-semibold text-[var(--text-primary)]" id="count-${secId}-${title}">${typeof count === 'number' ? count : new Intl.NumberFormat('en-US').format(count)}</span>
-            </div>
-            <p class="mt-2 text-sm font-medium text-[var(--text-secondary)] break-words">${title}</p>
-        </div>
-    `;
-}
-
-function animateCounter(id, target) {
-    const element = document.getElementById(id);
-    if (!element) return;
-    const duration = 1500;
-    let start = 0;
-    const startTime = performance.now();
-    function step(timestamp) {
-        const progress = timestamp - startTime;
-        const percentage = Math.min(progress / duration, 1);
-        const value = Math.floor(percentage * target);
-        element.textContent = value;
-        if (percentage < 1) {
-            window.requestAnimationFrame(step);
-        } else {
-            element.textContent = target;
-        }
-    }
-    window.requestAnimationFrame(step);
-}
-
-function setActiveTab(id) {
-    activeId = id;
-    subActiveId = null;
-    filterStatus = null;
-    isSearchMode = false;
-    searchInput.value = ''; 
-    buildMenu();
-    renderContent();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function renderSection(sec) {
     selectedIndex = null;
     contentArea.innerHTML = '';
-    const q = searchInput.value.trim().toLowerCase(); 
-    if (q) {
+    const q = searchInput.value.trim().toLowerCase();
+    
+    // Filter Banner
+    if (q || filterStatus) {
         contentArea.insertAdjacentHTML('beforeend', `
-            <div class="bg-[var(--card-bg)] shadow-md rounded-lg p-4 mb-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-lg font-medium text-[var(--text-primary)]">Table filtered by: "${searchInput.value}"</span>
-                    <button class="bg-gray-600 text-[var(--text-primary)] px-4 py-2 rounded-lg hover:bg-gray-500" onclick="searchInput.value = ''; renderContent();" aria-label="Clear filter">Clear Local Filter</button>
-                </div>
-            </div>
-        `);
-    } else if (filterStatus) {
-        contentArea.insertAdjacentHTML('beforeend', `
-            <div class="bg-[var(--card-bg)] shadow-md rounded-lg p-4 mb-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-lg font-medium text-[var(--text-primary)]">Showing only ${filterStatus} entries${filterStatus === 'Rejected' ? ' (including Objection)' : ''}</span>
-                    <button class="bg-gray-600 text-[var(--text-primary)] px-4 py-2 rounded-lg hover:bg-gray-500" onclick="clearFilter()" aria-label="Show all entries">Show All</button>
-                </div>
+            <div class="bg-[var(--card-bg)] shadow p-3 rounded-lg flex justify-between items-center">
+                <span class="text-[var(--text-primary)] font-medium">
+                    ${q ? `Search: "${q}"` : `Filter: ${filterStatus}`}
+                </span>
+                <button class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-500 text-sm" onclick="searchInput.value='';clearFilter()">Clear</button>
             </div>
         `);
     }
 
-    if (!filterStatus && !q) { // Only show the form if no filter or search is active
-        const formCardHtml = `
-            <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
-                <h2 class="text-2xl font-semibold mb-2 text-[var(--text-primary)]">${sec.title}</h2>
-                <div class="text-sm text-[var(--text-secondary)] mb-4">Use the form below to add / edit entries.</div>
-                <form id="entryForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                    <div class="col-span-1 sm:col-span-2 lg:col-span-2 flex justify-end gap-3 mt-4">
-                        <button type="button" id="resetForm" class="bg-gray-600 text-[var(--text-primary)] px-4 py-2 rounded-lg hover:bg-gray-500" aria-label="Reset form">Reset Form</button>
-                        <button type="submit" class="bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700" aria-label="Submit entry"><span id="submitText">Add New Entry</span></button>
+    // Form
+    if (!filterStatus && !q) {
+        contentArea.insertAdjacentHTML('beforeend', `
+            <div class="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg p-5 shadow-lg">
+                <h2 class="text-xl font-bold mb-4 text-[var(--text-primary)]">${sec.title} - Entry Form</h2>
+                <form id="entryForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    ${sec.fields.map(f => `
+                        <div class="flex flex-col gap-1 ${f.full ? 'col-span-1 md:col-span-2 lg:col-span-3' : ''}">
+                            <label for="${f.k}" class="text-xs font-bold uppercase text-[var(--text-secondary)]">${f.label}</label>
+                            ${f.type === 'select' ? 
+                                `<select id="${f.k}" class="p-2 rounded bg-[#222222] border border-[var(--border-color)] text-white focus:border-[var(--primary-color)] outline-none">
+                                    ${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+                                 </select>` : 
+                              f.type === 'textarea' ?
+                                `<textarea id="${f.k}" rows="3" class="p-2 rounded bg-[#222222] border border-[var(--border-color)] text-white focus:border-[var(--primary-color)] outline-none" placeholder="${f.label}"></textarea>` :
+                                `<input type="${f.type}" id="${f.k}" class="p-2 rounded bg-[#222222] border border-[var(--border-color)] text-white focus:border-[var(--primary-color)] outline-none" placeholder="${f.label}">`
+                            }
+                        </div>
+                    `).join('')}
+                    <div class="col-span-full flex justify-end gap-3 mt-2">
+                         <button type="button" id="resetForm" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-500">Reset</button>
+                         <button type="submit" class="bg-[var(--primary-color)] text-white px-6 py-2 rounded hover:bg-blue-700 font-semibold"><span id="submitText">Save Entry</span></button>
                     </div>
                 </form>
             </div>
-        `;
-        contentArea.insertAdjacentHTML('beforeend', formCardHtml);
-        const form = document.getElementById('entryForm');
-        sec.fields.forEach(f => {
-            const wrap = document.createElement('div');
-            wrap.className = `flex flex-col gap-2 ${f.full ? 'col-span-1 sm:col-span-2 lg:col-span-2' : ''}`;
-            const lbl = document.createElement('label');
-            lbl.textContent = f.label;
-            lbl.setAttribute('for', f.k);
-            lbl.className = 'text-sm font-semibold text-[var(--text-secondary)]';
-            wrap.appendChild(lbl);
-            let inp;
-            const inputClasses = 'w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all';
-            if (f.type === 'select') {
-                inp = document.createElement('select');
-                inp.className = inputClasses;
-                f.options.forEach(opt => {
-                    const o = document.createElement('option');
-                    o.value = opt;
-                    o.textContent = opt;
-                    inp.appendChild(o);
-                });
-            } else if (f.type === 'textarea') {
-                inp = document.createElement('textarea');
-                inp.rows = 3;
-                inp.className = inputClasses + ' resize-y';
-                inp.placeholder = `Enter ${f.label.toLowerCase()}`;
-            } else {
-                inp = document.createElement('input');
-                inp.type = f.type || 'text';
-                inp.className = inputClasses;
-                inp.placeholder = `Enter ${f.label.toLowerCase()}`;
-                if (f.type === 'date') inp.value = '';
-            }
-            inp.id = f.k;
-            inp.setAttribute('aria-required', f.optional ? 'false' : 'true');
-            wrap.appendChild(inp);
-            form.insertBefore(wrap, form.lastElementChild);
-        });
-        form.addEventListener('submit', (e) => {
+        `);
+        document.getElementById('entryForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const rec = {};
-            let isValid = true;
             sec.fields.forEach(f => {
                 const el = document.getElementById(f.k);
-                if (el) {
-                    if (f.type === 'number' && el.value && isNaN(el.value)) {
-                        showModal('Invalid Input', `${f.label} must be a valid number.`, {
-                            actions: [{ text: 'OK', value: false, style: 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500' }]
-                        });
-                        isValid = false;
-                    } else {
-                        rec[f.k] = el.value;
-                    }
-                }
+                if(el) rec[f.k] = el.value; 
             });
-            if (!isValid) return;
             const arr = state[sec.key];
             if (selectedIndex === null) arr.push(rec); else arr[selectedIndex] = rec;
             saveState();
             renderSection(sec);
-            showModal('Entry Saved', selectedIndex === null ? 'New record added.' : 'Record updated.', {
-                actions: [{ text: 'OK', value: true, style: 'bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700' }]
-            });
+            showModal('Success', 'Record saved successfully.');
         });
-        document.getElementById('resetForm').addEventListener('click', () => resetForm(sec));
+        document.getElementById('resetForm').addEventListener('click', () => { selectedIndex = null; document.getElementById('entryForm').reset(); document.getElementById('submitText').textContent='Save Entry'; });
     }
-    const tableCardHtml = `
-        <div class="max-h-[70vh] overflow-auto rounded-lg border border-[var(--border-color)] shadow-lg max-w-full">
-            <table id="dataTable" class="w-full bg-[var(--card-bg)]">
-                <thead>
-                    <tr class="bg-[#222222] text-left text-xs uppercase text-[var(--text-secondary)] font-semibold">
-                    </tr>
-                </thead>
-                <tbody id="dataTableBody">
-                </tbody>
-            </table>
+
+    // Table
+    contentArea.insertAdjacentHTML('beforeend', `
+        <div class="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg overflow-hidden shadow-lg flex flex-col">
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-[#222222] text-xs uppercase text-[var(--text-secondary)]">
+                        <tr>
+                            <th class="p-3 border-b border-[var(--border-color)]">Sr#</th>
+                            ${sec.fields.map(f => `<th class="p-3 border-b border-[var(--border-color)] whitespace-nowrap">${f.label}</th>`).join('')}
+                            <th class="p-3 border-b border-[var(--border-color)] text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody"></tbody>
+                </table>
+            </div>
         </div>
-    `;
-    contentArea.insertAdjacentHTML('beforeend', tableCardHtml);
-    const theadRow = document.querySelector('#dataTable thead tr');
-    const allFields = sec.fields;
-    const fieldLabels = {};
-    allFields.forEach(f => fieldLabels[f.k] = f.label);
-    const hasStatus = allFields.some(f => f.k === 'status');
-    const headerKeys = ['sr', ...allFields.map(f => f.k), 'actions'];
-    const displayHeaders = headerKeys.map(k => ({
-        k,
-        label: k === 'sr' ? 'Sr#' : (k === 'actions' ? 'Actions' : (fieldLabels[k] || k.charAt(0).toUpperCase() + k.slice(1)))
-    }));
-    theadRow.innerHTML = displayHeaders.map(h => `<th class="p-3">${h.label}</th>`).join('');
-    renderTable(sec, displayHeaders, hasStatus);
-    document.getElementById('dataTableBody').addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        const idx = Number(btn.dataset.idx);
-        const act = btn.dataset.act;
-        const rec = state[sec.key][idx];
-        if (act === 'select') {
-            selectedIndex = idx;
-            fillForm(rec, sec);
-            document.getElementById('submitText').textContent = 'Save Changes';
-            Array.from(document.querySelectorAll('#dataTableBody tr')).forEach(r => r.classList.remove('ring-2', 'ring-[var(--primary-color)]'));
-            btn.closest('tr').classList.add('ring-2', 'ring-[var(--primary-color)]');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-        }
-        if (act === 'del') {
-            showModal('Confirm Deletion', 'Are you sure you want to delete this entry?', {
-                actions: [
-                    { text: 'Cancel', value: false, style: 'bg-gray-600 text-[var(--text-primary)] px-4 py-2 rounded-lg hover:bg-gray-500' },
-                    { text: 'Delete', value: true, style: 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500' }
-                ]
-            }).then(result => {
-                if (result) {
-                    state[sec.key].splice(idx, 1);
-                    saveState();
-                    renderSection(sec);
-                }
-            });
-            return;
-        }
-        if (act === 'rem1' && rec.reminder1 === undefined) { rec.reminder1 = todayISO(); saveState(); renderTable(sec, displayHeaders, hasStatus); return; }
-        if (act === 'docs' && rec.documentsReceived === undefined) { rec.documentsReceived = todayISO(); saveState(); renderTable(sec, displayHeaders, hasStatus); return; }
-        if (act === 'sent' && rec.status !== 'Sent') { rec.status = 'Sent'; saveState(); renderTable(sec, displayHeaders, hasStatus); return; }
-    });
-    function fillForm(rec, sec) {
-        sec.fields.forEach(f => {
-            const el = document.getElementById(f.k);
-            if (el) el.value = rec[f.k] || '';
-        });
-    }
+    `);
+
+    renderTableRows(sec);
 }
 
-function renderTable(sec, displayHeaders, hasStatus) {
+function renderTableRows(sec) {
     const tbody = document.getElementById('dataTableBody');
-    if (!tbody) return;
-    const fragment = document.createDocumentFragment();
     const arr = state[sec.key] || [];
     const q = searchInput.value.trim().toLowerCase();
+    const hasStatus = sec.fields.some(f => f.k === 'status');
+    
+    let rows = '';
     arr.forEach((row, idx) => {
-        let hay = '';
-        sec.fields.forEach(f => { hay += (row[f.k] || '') + ' '; });
-        hay = hay.toLowerCase();
-        
-        let showRow = true;
-        if (q && !hay.includes(q)) showRow = false;
-
-        if (showRow && filterStatus && hasStatus) {
-            if (filterStatus === 'Rejected') {
-                showRow = row.status === 'Rejected' || row.status === 'Objection';
-            } else {
-                showRow = row.status === filterStatus;
-            }
+        let text = Object.values(row).join(' ').toLowerCase();
+        if (q && !text.includes(q)) return;
+        if (filterStatus && hasStatus) {
+            if (filterStatus === 'Rejected' && !['Rejected', 'Objection'].includes(row.status)) return;
+            if (filterStatus !== 'Rejected' && row.status !== filterStatus) return;
         }
-        
-        if (!showRow) return;
-        
-        const tr = document.createElement('tr');
-        tr.className = 'border-b border-[var(--border-color)] hover:bg-[var(--hover-bg)] transition-colors';
-        if (idx === selectedIndex) {
-            tr.classList.add('ring-2', 'ring-[var(--primary-color)]');
-        }
-        let rowHtml = '';
-        displayHeaders.forEach(h => {
-            if (h.k === 'sr') {
-                rowHtml += `<td class="p-3 text-center text-sm font-medium text-[var(--text-primary)]">${idx + 1}</td>`;
-            } else if (h.k === 'actions') {
-                const st = (row.status || 'Pending');
-                rowHtml += `
-                    <td class="p-3 whitespace-nowrap">
-                        <div class="flex gap-2 text-xs">
-                            <button class="bg-[var(--primary-color)] text-white px-3 py-1 rounded-lg hover:bg-blue-700" data-act="select" data-idx="${idx}" aria-label="Edit entry">Edit</button>
-                            ${hasStatus && st === 'Pending' ? `<button class="bg-[var(--primary-color)] text-white px-3 py-1 rounded-lg hover:bg-blue-700" data-act="sent" data-idx="${idx}" aria-label="Mark as sent">Mark Sent</button>` : ''}
-                            <button class="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-500" data-act="del" data-idx="${idx}" aria-label="Delete entry">Delete</button>
-                        </div>
-                    </td>
-                `;
-            } else if (h.k === 'status' && hasStatus) {
-                const st = (row.status || 'Pending');
-                rowHtml += `<td class="p-3"><span class="px-3 py-1 text-xs font-semibold whitespace-nowrap rounded-full status-${st} text-center">${st}</span></td>`;
-            } else if (h.k === 'remarks') {
-                rowHtml += `<td class="p-3 text-sm text-[var(--text-secondary)] max-w-[150px] truncate">${(row.remarks || '-').substring(0, 50)}...</td>`;
-            } else {
-                let value = row[h.k] || '-';
-                if (['claimAmount', 'sanctionedAmount', 'amount', 'chequeAmount'].includes(h.k)) {
-                    value = value !== '-' ? new Intl.NumberFormat('en-US').format(value) : '-';
-                    rowHtml += `<td class="p-3 text-sm font-semibold text-green-400 whitespace-nowrap">${value}</td>`;
-                } else {
-                    rowHtml += `<td class="p-3 text-sm text-[var(--text-secondary)] whitespace-nowrap max-w-[150px] truncate">${value}</td>`;
-                }
-            }
-        });
-        tr.innerHTML = rowHtml;
-        fragment.appendChild(tr);
-    });
-    tbody.innerHTML = '';
-    tbody.appendChild(fragment);
-}
 
-function resetForm(sec) {
-    selectedIndex = null;
-    document.getElementById('submitText').textContent = 'Add New Entry';
-    sec.fields.forEach(f => {
-        const el = document.getElementById(f.k);
-        if (el) el.value = (f.type === 'date' ? '' : (f.type === 'select' ? f.options[0] : ''));
+        rows += `
+            <tr class="border-b border-[var(--border-color)] hover:bg-[var(--hover-bg)] transition-colors group ${idx === selectedIndex ? 'bg-blue-900 bg-opacity-20' : ''}">
+                <td class="p-3 text-sm text-center text-[var(--text-secondary)]">${idx+1}</td>
+                ${sec.fields.map(f => {
+                    let val = row[f.k] || '-';
+                    if (['status'].includes(f.k)) return `<td class="p-3"><span class="status-${val} px-2 py-0.5 rounded text-xs">${val}</span></td>`;
+                    if (f.type === 'number' && val !== '-') val = new Intl.NumberFormat().format(val);
+                    return `<td class="p-3 text-sm whitespace-nowrap max-w-[150px] overflow-hidden text-ellipsis" title="${val}">${val}</td>`;
+                }).join('')}
+                <td class="p-3 text-right whitespace-nowrap">
+                    <button class="text-blue-400 hover:text-white mr-2" onclick="editRow('${sec.key}', ${idx})"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                    <button class="text-red-500 hover:text-white" onclick="deleteRow('${sec.key}', ${idx})"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                </td>
+            </tr>
+        `;
     });
-    Array.from(document.querySelectorAll('#dataTableBody tr')).forEach(r => r.classList.remove('ring-2', 'ring-[var(--primary-color)]'));
-}
-
-function renderSettings() {
-    contentArea.innerHTML = `
-        <h2 class="text-3xl font-semibold text-[var(--text-primary)] mb-4">Application Settings</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
-                <div class="flex items-center gap-3 mb-4">
-                    <i data-lucide="text-cursor" class="w-6 h-6 text-purple-500"></i>
-                    <h3 class="text-xl font-semibold text-[var(--text-primary)]">Font Size</h3>
-                </div>
-                <p class="text-[var(--text-secondary)] mb-4 text-sm">Adjust the application's text size.</p>
-                <div class="flex gap-2">
-                    ${renderFontSizeButton('text-base', 'Normal')}
-                    ${renderFontSizeButton('text-lg', 'Large')}
-                    ${renderFontSizeButton('text-xl', 'Extra Large (XL)')}
-                </div>
-            </div>
-            <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
-                <div class="flex items-center gap-3 mb-4">
-                    <i data-lucide="database" class="w-6 h-6 text-green-500"></i>
-                    <h3 class="text-xl font-semibold text-[var(--text-primary)]">Export All Data (XLS)</h3>
-                </div>
-                <p class="text-[var(--text-secondary)] mb-4 text-sm">Download all all sections into a single Excel file.</p>
-                <button id="downloadAllXlsx" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500" aria-label="Export all data to Excel">
-                    <i data-lucide="file-spreadsheet" class="w-5 h-5 inline mr-1"></i> Download All Data (XLS)
-                </button>
-            </div>
-            <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
-                <div class="flex items-center gap-3 mb-4">
-                    <i data-lucide="upload" class="w-6 h-6 text-indigo-500"></i>
-                    <h3 class="text-xl font-semibold text-[var(--text-primary)]">Import Data (JSON)</h3>
-                </div>
-                <p class="text-[var(--text-secondary)] mb-4 text-sm">Restore data from a JSON file.</p>
-                <button id="importAll" class="w-full bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700" aria-label="Import JSON data">
-                    <i data-lucide="file-json" class="w-5 h-5 inline mr-1"></i> Import JSON File
-                </button>
-            </div>
-        </div>
-    `;
+    tbody.innerHTML = rows || '<tr><td colspan="100" class="p-4 text-center text-[var(--text-secondary)]">No records found</td></tr>';
     initializeIcons();
-    document.querySelectorAll('.font-size-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const size = btn.dataset.size;
-            applyFontSize(size);
-            document.querySelectorAll('.font-size-btn').forEach(b => b.classList.remove('bg-[var(--primary-color)]', 'text-white'));
-            btn.classList.add('bg-[var(--primary-color)]', 'text-white');
-        });
-        if (btn.dataset.size === currentFontSize) {
-            btn.classList.add('bg-[var(--primary-color)]', 'text-white');
-        } else {
-            btn.classList.add('bg-gray-600', 'text-[var(--text-primary)]');
-        }
-    });
-    document.getElementById('downloadAllXlsx').addEventListener('click', downloadAllXlsx);
-    document.getElementById('importAll').addEventListener('click', handleImport);
 }
 
-function renderFontSizeButton(size, label) {
-    return `
-        <button class="font-size-btn px-3 py-1 rounded-lg text-sm" data-size="${size}" aria-label="Set font size to ${label}">
-            ${label}
-        </button>
-    `;
+window.editRow = (key, idx) => {
+    selectedIndex = idx;
+    const rec = state[key][idx];
+    const sec = getCurrentSec();
+    if(document.getElementById('entryForm')) {
+        sec.fields.forEach(f => {
+            const el = document.getElementById(f.k);
+            if(el) el.value = rec[f.k] || '';
+        });
+        document.getElementById('submitText').textContent = 'Update Entry';
+        window.scrollTo({top:0, behavior:'smooth'});
+        renderTableRows(sec);
+    }
+};
+
+window.deleteRow = (key, idx) => {
+    if(confirm('Delete this entry?')) {
+        state[key].splice(idx, 1);
+        saveState();
+        renderContent();
+    }
+};
+
+function selectRowAndNavigate(key, index) {
+    const allSections = getAllSectionsWithKey();
+    const sec = allSections.find(s => s.key === key);
+    if (!sec) return;
+    if (key.includes('welfare_wmc_')) { activeId = 'wmc'; subActiveId = sec.id; } 
+    else { activeId = sec.id; subActiveId = null; }
+    selectedIndex = index;
+    filterStatus = null;
+    isSearchMode = false;
+    searchInput.value = '';
+    buildMenu();
+    renderContent();
+    // Use timeout to allow render
+    setTimeout(() => {
+        window.editRow(key, index);
+    }, 100);
 }
 
 function getAllSectionsWithKey() {
     let all = [];
     SECTIONS.forEach(sec => {
         if (sec.key) all.push(sec);
-        if (sec.subSections) sec.subSections.forEach(sub => {
-            if (sub.key) all.push(sub);
-        });
+        if (sec.subSections) sec.subSections.forEach(sub => { if (sub.key) all.push(sub); });
     });
     return all;
 }
 
-function prepareRowsForSection(sec) {
-    const arr = state[sec.key] || [];
-    const fields = sec.fields;
-    const headers = fields.map(f => f.label.split('(')[0].trim() || f.label);
-    const rows = [['Sr#', ...headers]];
-    arr.forEach((r, index) => {
-        const row = [index + 1];
-        fields.forEach(f => row.push(r[f.k] || ''));
-        rows.push(row);
+function performCrossTabSearch(query) {
+    if (!query) { isSearchMode = false; renderContent(); return; }
+    isSearchMode = true;
+    const resultsContainer = searchDedicatedResults;
+    resultsContainer.classList.remove('hidden');
+    contentArea.classList.add('hidden');
+    resultsContainer.innerHTML = `<h2 class="text-2xl font-bold mb-4">Results for "${query}"</h2>`;
+    
+    let found = false;
+    getAllSectionsWithKey().forEach(sec => {
+        const arr = state[sec.key] || [];
+        const hits = arr.map((r, i) => ({r, i})).filter(({r}) => Object.values(r).join(' ').toLowerCase().includes(query.toLowerCase()));
+        if(hits.length > 0) {
+            found = true;
+            resultsContainer.insertAdjacentHTML('beforeend', `
+                <div class="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg mb-4 overflow-hidden">
+                    <div class="p-3 bg-[#222222] font-bold">${sec.title} (${hits.length})</div>
+                    <table class="w-full text-left">
+                         <tbody class="divide-y divide-[var(--border-color)]">
+                            ${hits.map(({r, i}) => `
+                                <tr class="hover:bg-[var(--hover-bg)] cursor-pointer" onclick="selectRowAndNavigate('${sec.key}', ${i})">
+                                    <td class="p-3 text-sm">${r.applicantName || r.subject || 'Record'}</td>
+                                    <td class="p-3 text-right text-blue-400 text-sm">View</td>
+                                </tr>
+                            `).join('')}
+                         </tbody>
+                    </table>
+                </div>
+            `);
+        }
     });
-    return rows;
+    if(!found) resultsContainer.innerHTML += '<p class="text-[var(--text-secondary)]">No matches found.</p>';
 }
 
-function saveArrayAsFile(data, filename) {
-    const blob = new Blob([data], { type: 'application/octet-stream' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
+/* ---------- Export / Import / Settings ---------- */
+function renderSettings() {
+    contentArea.innerHTML = `
+        <h2 class="text-3xl font-semibold mb-4 text-[var(--text-primary)]">Settings</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             <div class="bg-[var(--card-bg)] p-4 rounded border border-[var(--border-color)]">
+                <h3 class="font-bold mb-2">Data Management</h3>
+                <button onclick="downloadAllXlsx()" class="w-full mb-2 bg-green-600 text-white p-2 rounded">Download All (XLSX)</button>
+                <button onclick="document.getElementById('importFile').click()" class="w-full bg-blue-600 text-white p-2 rounded">Import JSON</button>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="handleImport(this)">
+             </div>
+             <div class="bg-[var(--card-bg)] p-4 rounded border border-[var(--border-color)]">
+                <h3 class="font-bold mb-2">Appearance</h3>
+                <div class="flex gap-2">
+                    <button class="px-3 py-1 bg-gray-700 rounded text-white text-sm" onclick="applyFontSize('text-sm')">Small</button>
+                    <button class="px-3 py-1 bg-gray-700 rounded text-white text-base" onclick="applyFontSize('text-base')">Normal</button>
+                    <button class="px-3 py-1 bg-gray-700 rounded text-white text-lg" onclick="applyFontSize('text-lg')">Large</button>
+                </div>
+             </div>
+        </div>
+    `;
 }
-
-document.getElementById('exportTabXlsx').addEventListener('click', async () => {
-    const sec = getCurrentSec();
-    if (!sec || !sec.key) {
-        showModal('Export Error', 'Please select a data section to export.', {
-            actions: [{ text: 'OK', value: false, style: 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500' }]
-        });
-        return;
-    }
-    try {
-        const rows = prepareRowsForSection(sec);
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet(rows);
-        XLSX.utils.book_append_sheet(wb, ws, sec.title.substring(0, 31));
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        saveArrayAsFile(wbout, `${sec.title.replace(/\s+/g, '_')}_Diary_Export.xlsx`);
-        showModal('Export Complete', `The data for '${sec.title}' has been exported.`, {
-            actions: [{ text: 'Got It', value: true, style: 'bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700' }]
-        });
-    } catch (e) {
-        console.error('Export failed:', e);
-        showModal('Export Failed', 'An error occurred while exporting the data.', {
-            actions: [{ text: 'Close', value: false, style: 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500' }]
-        });
-    }
-});
 
 async function downloadAllXlsx() {
-    showModal('Exporting', 'Please wait while the data is being exported...', {
-        actions: []
-    });
-    try {
-        const wb = XLSX.utils.book_new();
-        getAllSectionsWithKey().forEach(sec => {
-            const rows = prepareRowsForSection(sec);
-            const ws = XLSX.utils.aoa_to_sheet(rows);
-            XLSX.utils.book_append_sheet(wb, ws, sec.title.substring(0, 31));
-        });
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        saveArrayAsFile(wbout, `Welfare_All_Sections_Diary.xlsx`);
-        showModal('Export Complete', 'All data sections exported.', {
-            actions: [{ text: 'OK', value: true, style: 'bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700' }]
-        });
-    } catch (e) {
-        console.error('Export failed:', e);
-        showModal('Export Failed', 'An error occurred while exporting the data.', {
-            actions: [{ text: 'Close', value: false, style: 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500' }]
-        });
-    }
-}
-
-function handleImport() {
-    const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = '.json';
-    inp.onchange = e => {
-        const f = e.target.files[0];
-        if (!f) return;
-        const r = new FileReader();
-        r.onload = ev => {
-            try {
-                const parsed = JSON.parse(ev.target.result);
-                if (typeof parsed === 'object') {
-                    state = parsed;
-                    SECTIONS.forEach(sec => {
-                        if (sec.key && !state[sec.key]) state[sec.key] = [];
-                        if (sec.subSections) sec.subSections.forEach(sub => { if (sub.key && !state[sub.key]) state[sub.key] = []; });
-                    });
-                    saveState();
-                    buildMenu();
-                    renderContent();
-                    showModal('Import Successful', 'Data restored from JSON.', {
-                        actions: [{ text: 'Done', value: true, style: 'bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700' }]
-                    });
-                } else {
-                    showModal('Import Failed', 'File format incorrect.', {
-                        actions: [{ text: 'Close', value: false, style: 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500' }]
-                    });
-                }
-            } catch {
-                showModal('Import Failed', 'Invalid JSON content.', {
-                    actions: [{ text: 'Close', value: false, style: 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500' }]
-                });
-            }
-        };
-        r.readAsText(f);
-    };
-    inp.click();
-}
-
-function selectRowAndNavigate(key, index) {
-    const allSections = getAllSectionsWithKey();
-    const sec = allSections.find(s => s.key === key);
-    if (!sec) return;
-
-    if (key.includes('welfare_wmc_')) {
-        activeId = 'wmc';
-        subActiveId = sec.id;
-    } else {
-        activeId = sec.id;
-        subActiveId = null;
-    }
-    
-    selectedIndex = index;
-    filterStatus = null;
-    isSearchMode = false;
-    searchInput.value = ''; 
-
-    buildMenu();
-    renderContent(); 
-
-    setTimeout(() => {
-        const targetRow = document.querySelector(`#dataTableBody tr:nth-child(${index + 1})`);
-        if (targetRow) {
-            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, 100);
-}
-window.selectRowAndNavigate = selectRowAndNavigate;
-
-function performCrossTabSearch(query, clearInput) {
-    const q = query.trim().toLowerCase();
-    
-    if (q.length === 0) {
-        isSearchMode = false;
-        if (clearInput) searchInput.value = '';
-        renderContent();
-        return;
-    }
-
-    isSearchMode = true; 
-    
-    if (clearInput) {
-        searchInput.value = ''; 
-    }
-
-    const allSections = getAllSectionsWithKey();
-    const searchResults = {};
-    let totalResults = 0;
-
-    allSections.forEach(sec => {
+    const wb = XLSX.utils.book_new();
+    getAllSectionsWithKey().forEach(sec => {
         const arr = state[sec.key] || [];
-        const searchRecords = arr.map((row, originalIndex) => ({
-            row,
-            originalIndex,
-            hay: sec.fields.map(f => row[f.k] || '').join(' ').toLowerCase()
-        })).filter(item => item.hay.includes(q));
-
-        if (searchRecords.length > 0) {
-            searchResults[sec.id] = {
-                section: sec,
-                results: searchRecords
-            };
-            totalResults += searchRecords.length;
-        }
+        const rows = [sec.fields.map(f => f.label), ...arr.map(r => sec.fields.map(f => r[f.k]))];
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        XLSX.utils.book_append_sheet(wb, ws, sec.title.substring(0,30));
     });
-
-    renderContent(); 
-    
-    const resultsContainer = searchDedicatedResults;
-    resultsContainer.innerHTML = '';
-
-    let resultHtml = `
-        <h2 class="text-3xl font-semibold text-[var(--text-primary)] mb-4">${clearInput ? 'Dedicated Search Results' : 'Real-time Search'} for: "${query}"</h2>
-        <p class="text-xl text-[var(--text-secondary)] mb-6">${totalResults} result(s) found across ${Object.keys(searchResults).length} section(s).</p>
-        <div id="searchResultsContainerBody" class="flex flex-col gap-6"></div>
-    `;
-    resultsContainer.insertAdjacentHTML('beforeend', resultHtml);
-    const resultsBody = document.getElementById('searchResultsContainerBody');
-
-    if (totalResults === 0) {
-        resultsBody.innerHTML = '<p class="text-lg text-red-400">No results found.</p>';
-    } else {
-        Object.values(searchResults).forEach(item => {
-            const sec = item.section;
-            const results = item.results;
-            
-            let sectionHtml = `
-                <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg overflow-hidden">
-                    <h3 class="text-xl font-bold p-3 bg-[#222222] text-[var(--text-primary)]">${sec.title} (${results.length} result${results.length !== 1 ? 's' : ''})</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full bg-[var(--card-bg)]">
-                            <thead>
-                                <tr class="bg-[#2a2a2a] text-left text-xs uppercase text-[var(--text-secondary)] font-semibold">
-                                    <th class="p-3">Sr#</th>
-                                    <th class="p-3">Applicant / Subject</th>
-                                    ${sec.fields.some(f => f.k === 'status') ? '<th class="p-3">Status</th>' : ''}
-                                    <th class="p-3">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${results.map(item => {
-                                    const row = item.row;
-                                    const originalIndex = item.originalIndex;
-                                    const applicant = row.applicantName || row.subject || '-';
-                                    const status = row.status || 'Pending';
-                                    const hasStatusField = sec.fields.some(f => f.k === 'status');
-
-                                    return `
-                                        <tr class="border-b border-[var(--border-color)] hover:bg-[var(--hover-bg)] transition-colors">
-                                            <td class="p-3 text-center text-sm font-medium text-[var(--text-primary)]">${originalIndex + 1}</td>
-                                            <td class="p-3 text-sm text-[var(--text-secondary)] max-w-[200px] truncate">${applicant}</td>
-                                            ${hasStatusField ? `<td class="p-3"><span class="px-3 py-1 text-xs font-semibold whitespace-nowrap rounded-full status-${status} text-center">${status}</span></td>` : ''}
-                                            <td class="p-3 whitespace-nowrap">
-                                                <button class="bg-[var(--primary-color)] text-white px-3 py-1 rounded-lg hover:bg-blue-700 text-xs" 
-                                                    onclick="selectRowAndNavigate('${sec.key}', ${originalIndex})" aria-label="View/Edit entry">
-                                                    View/Edit
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            resultsBody.insertAdjacentHTML('beforeend', sectionHtml);
-        });
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    XLSX.writeFile(wb, 'Welfare_Diary_Full.xlsx');
 }
 
-window.onload = async function() {
-    
-    searchInput.addEventListener('input', debounce(() => {
-        const query = searchInput.value;
-        const sec = getCurrentSec();
+function handleImport(input) {
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            state = JSON.parse(e.target.result);
+            saveState();
+            alert('Data imported successfully!');
+            location.reload();
+        } catch(err) { alert('Invalid JSON'); }
+    };
+    reader.readAsText(file);
+}
 
-        if (activeId === 'dashboard' || isSearchMode || query.length > 0) {
-            performCrossTabSearch(query, false); 
-        } 
-        else if (sec && sec.key && query.length === 0) {
-            isSearchMode = false;
-            renderContent();
-        }
-        else if (sec && sec.key) {
-            const allFields = sec.fields;
-            const hasStatus = allFields.some(f => f.k === 'status');
-            const fieldLabels = {};
-            allFields.forEach(f => fieldLabels[f.k] = f.label);
-            const headerKeys = ['sr', ...allFields.map(f => f.k), 'actions'];
-            const displayHeaders = headerKeys.map(k => ({
-                k,
-                label: k === 'sr' ? 'Sr#' : (k === 'actions' ? 'Actions' : fieldLabels[k] || k.charAt(0).toUpperCase() + k.slice(1))
-            }));
-            renderTable(sec, displayHeaders, hasStatus);
-        }
+// Global Listener for Search
+searchInput.addEventListener('input', debounce((e) => {
+    const val = e.target.value;
+    if(activeId === 'dashboard') performCrossTabSearch(val);
+    else renderContent();
+}, 300));
 
-    }, 300));
-    
-    searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault(); 
-            performCrossTabSearch(searchInput.value, true); 
-        }
-    });
-
-    menuToggleEl.addEventListener('click', toggleMenu);
-    window.addEventListener('resize', applyLayout);
-    themeToggle.addEventListener('click', () => {
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        applyTheme(newTheme);
-    });
-    await initAuth();
-};
+// Init
+window.onload = initAuth;
 </script>
-
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
   import { getFirestore, collection, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-
   const firebaseConfig = {
     apiKey: "AIzaSyCVj-Eb9wNAaqwFyGdRgC7uyR24O2jjOIw",
     authDomain: "spuwelfarediary.firebaseapp.com",
@@ -1726,21 +1151,12 @@ window.onload = async function() {
     messagingSenderId: "976541344867",
     appId: "1:976541344867:web:96f6e70b42f0ab33808456"
   };
-
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-  window.db = db;
-  window.auth = auth;
-  window.getDoc = getDoc;
-  window.setDoc = setDoc;
-  window.doc = doc;
-  window.collection = collection;
+  window.db = getFirestore(app);
+  window.auth = getAuth(app);
+  window.getDoc = getDoc; window.setDoc = setDoc; window.doc = doc; window.collection = collection;
   window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-  window.signOut = signOut;
-  window.onAuthStateChanged = onAuthStateChanged;
-  window.sendPasswordResetEmail = sendPasswordResetEmail;
- </script>
-
+  window.signOut = signOut; window.onAuthStateChanged = onAuthStateChanged; window.sendPasswordResetEmail = sendPasswordResetEmail;
+</script>
 </body>
 </html>
