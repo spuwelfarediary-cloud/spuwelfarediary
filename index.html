@@ -22,6 +22,18 @@
             --gradient-bg: linear-gradient(145deg, #1B1B1B, #252525);
         }
 
+        .light {
+            --sidebar-bg: #FFFFFF;
+            --content-bg: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --primary-color: #2563EB;
+            --text-primary: #1F2937;
+            --text-secondary: #4B5563;
+            --border-color: #D1D5DB;
+            --hover-bg: #F3F4F6;
+            --gradient-bg: linear-gradient(145deg, #FFFFFF, #F3F4F6);
+        }
+
         html, body {
             height: 100%;
             margin: 0;
@@ -76,8 +88,34 @@
 
         /* Dim placeholder text */
         input::placeholder, textarea::placeholder {
-            color: #A1A1AA;
+            color: var(--text-secondary);
             opacity: 0.5;
+        }
+
+        /* Modern Minimalistic Scrollbar for Dark Mode */
+        .dark ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .dark ::-webkit-scrollbar-track {
+            background: #1a1a1a; /* Dark background */
+            border-radius: 3px;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb {
+            background: #555; /* Subtle gray */
+            border-radius: 3px;
+        }
+        
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #777; /* Lighter on hover */
+        }
+        
+        /* For Firefox in dark mode */
+        .dark {
+            scrollbar-width: thin;
+            scrollbar-color: #555 #1a1a1a;
         }
     </style>
 </head>
@@ -87,16 +125,19 @@
             <h2 class="text-2xl font-bold text-[var(--text-primary)] mb-6 text-center">Login to Welfare Diary</h2>
             <form id="loginForm" class="space-y-4">
                 <div>
-                    <label for="username" class="text-sm font-semibold text-[var(--text-secondary)]">Username</label>
-                    <input type="text" id="username" class="mt-1 w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all" placeholder="Enter username" required aria-required="true">
+                    <label for="email" class="text-sm font-semibold text-[var(--text-secondary)]">Email</label>
+                    <input type="email" id="email" class="mt-1 w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all" placeholder="Enter email" required aria-required="true">
                 </div>
                 <div>
                     <label for="password" class="text-sm font-semibold text-[var(--text-secondary)]">Password</label>
                     <input type="password" id="password" class="mt-1 w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all" placeholder="Enter password" required aria-required="true">
                 </div>
+                <div class="text-right">
+                    <a href="#" id="forgotPassword" class="text-blue-500 text-sm hover:underline">Forgot Password?</a>
+                </div>
                 <button type="submit" class="w-full bg-[var(--primary-color)] text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">Login</button>
             </form>
-            <p id="loginError" class="text-red-500 text-sm mt-4 hidden">Invalid username or password</p>
+            <p id="loginError" class="text-red-500 text-sm mt-4 hidden">Invalid email or password</p>
         </div>
     </div>
 
@@ -111,7 +152,7 @@
 
         <div class="sidebar w-[60px] md:w-[300px] flex flex-col flex-shrink-0">
             <div class="flex items-center justify-start gap-3 px-4 py-4 border-b border-[var(--border-color)]">
-                <img src="./logo.jpeg" alt="Welfare Branch Logo" class="w-10 h-10 rounded-md object-cover shadow-md" onerror="this.onerror=null; this.src='https://via.placeholder.com/40?text=WL'" />
+                <img src="./logo.jpg" alt="Welfare Branch Logo" class="w-10 h-10 rounded-md object-cover shadow-md" onerror="this.onerror=null; this.src='https://via.placeholder.com/40?text=WL'" />
                 <div class="hidden md:block">
                     <span class="text-[var(--text-primary)] font-semibold text-lg block">Welfare Branch Diary</span>
                     <span class="text-[var(--text-secondary)] text-sm">Special Protection Unit</span>
@@ -121,11 +162,7 @@
                 <div class="space-y-1 px-2" id="menu"></div>
             </div>
             <div class="mt-4 pt-4 border-t border-[var(--border-color)] p-4">
-                <button id="logoutBtn" class="flex items-center gap-3 w-full text-left bg-none border-none text-[#ccc] p-3 rounded-lg hover:bg-[#2c2c2c] hover:text-white transition-all font-medium" aria-label="Logout">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
-                    <span class="hidden md:inline">Logout</span>
-                </button>
-                <p class="text-xs text-[var(--text-secondary)] text-center hidden md:block mt-2">v1.0 Offline Tracker</p>
+                <p class="text-xs text-[var(--text-secondary)] text-center hidden md:block mt-2">© 2025 Devoloped by Hashim Ali</p>
             </div>
         </div>
 
@@ -145,7 +182,27 @@
                         <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export Tab (XLS)
                     </button>
                 </div>
-            </div>
+                <div class="flex justify-end items-center space-x-2"> 
+    <div id="notifyContainer" class="relative">
+        <button id="notifyBtn" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600" aria-label="Notifications">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="notifyCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-2 hidden">0</span>
+        </button>
+        <div id="notifyDropdown" class="hidden absolute right-0 mt-2 w-80 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+            <ul id="notifyList" class="divide-y divide-[var(--border-color)]"></ul>
+            <button id="clearNotifs" class="w-full p-2 text-center text-[var(--text-secondary)] hover:bg-[var(--hover-bg)]">Clear All</button>
+        </div>
+    </div>
+
+    <button id="themeToggle" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600" aria-label="Toggle theme">
+        <i data-lucide="moon" class="w-5 h-5"></i>
+    </button>
+
+    <button id="logoutBtn" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600" aria-label="Logout">
+        <i data-lucide="log-out" class="w-5 h-5"></i>
+    </button>
+</div>
+
             
             <div id="searchDedicatedResults" class="flex flex-col gap-4 max-w-full hidden"></div>
             
@@ -157,7 +214,8 @@
 /* ---------- Configuration ---------- */
 const SECTIONS = [
     { id:'dashboard', title:'Dashboard', icon:'layout-dashboard' },
-    { id:'medical', title:'Medical Financial Assistance', key:'welfare_medical', icon:'badge-dollar', fields:[
+    { id:'medical', title:'Medical Financial Assistance', key:'welfare_medical', icon:'dollar-sign', fields:[
+        {k:'diaryNo',label:'Diary No.',type:'number'},
         {k:'dateReceived',label:'Date Received',type:'date'},
         {k:'applicantName',label:'Applicant Name',type:'text'},
         {k:'subject',label:'Subject',type:'text'},
@@ -172,21 +230,8 @@ const SECTIONS = [
         {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
         {k:'remarks',label:'Remarks',type:'textarea', full:true}
     ]},
-    { id:'misc', title:'Misc Letter', key:'welfare_misc', icon:'mail', fields:[
-        {k:'dateReceived',label:'Date Received',type:'date'},
-        {k:'applicantName',label:'Applicant Name',type:'text'},
-        {k:'subject',label:'Subject',type:'text'},
-        {k:'fromOffice',label:'From Office',type:'text'},
-        {k:'missing1',label:'Missing Docs Letter 1st',type:'date', optional: true},
-        {k:'reminder1',label:'Reminder 1',type:'date', optional: true},
-        {k:'reminder2',label:'Reminder 2',type:'date', optional: true},
-        {k:'reminder3',label:'Reminder 3',type:'date', optional: true},
-        {k:'documentsReceived',label:'Documents Received',type:'date', optional: true},
-        {k:'sentHigher',label:'Sent to Higher Office',type:'date', optional: true},
-        {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
-        {k:'remarks',label:'Remarks',type:'textarea', full:true}
-    ]},
     { id:'wedding', title:'Wedding Gift', key:'welfare_wedding', icon:'gift', fields:[
+        {k:'diaryNo',label:'Diary No.',type:'number'},
         {k:'dateReceived',label:'Date Received',type:'date'},
         {k:'applicantName',label:'Applicant Name',type:'text'},
         {k:'subject',label:'Subject',type:'text'},
@@ -201,7 +246,8 @@ const SECTIONS = [
         {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
         {k:'remarks',label:'Remarks',type:'textarea', full:true}
     ]},
-    { id:'scholarship', title:'Scholarship', key:'welfare_scholarship', icon:'graduation-cap', fields:[
+    { id:'scholarship', title:'Scholarships', key:'welfare_scholarship', icon:'graduation-cap', fields:[
+        {k:'diaryNo',label:'Diary No.',type:'number'},
         {k:'dateReceived',label:'Date Received',type:'date'},
         {k:'applicantName',label:'Applicant Name',type:'text'},
         {k:'subject',label:'Subject',type:'text'},
@@ -217,6 +263,7 @@ const SECTIONS = [
         {k:'remarks',label:'Remarks',type:'textarea', full:true}
     ]},
     { id:'basicpay', title:'Last Month Basic Pay', key:'welfare_basicpay', icon:'wallet', fields:[
+        {k:'diaryNo',label:'Diary No.',type:'number'},
         {k:'dateReceived',label:'Date Received',type:'date'},
         {k:'applicantName',label:'Applicant Name',type:'text'},
         {k:'subject',label:'Subject',type:'text'},
@@ -227,8 +274,24 @@ const SECTIONS = [
         {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
         {k:'remarks',label:'Remarks',type:'textarea', full:true}
     ]},
+    { id:'misc', title:'Misc Letter', key:'welfare_misc', icon:'mail', fields:[
+        {k:'diaryNo',label:'Diary No.',type:'number'},
+        {k:'dateReceived',label:'Date Received',type:'date'},
+        {k:'applicantName',label:'Applicant Name',type:'text'},
+        {k:'subject',label:'Subject',type:'text'},
+        {k:'fromOffice',label:'From Office',type:'text'},
+        {k:'missing1',label:'Missing Docs Letter 1st',type:'date', optional: true},
+        {k:'reminder1',label:'Reminder 1',type:'date', optional: true},
+        {k:'reminder2',label:'Reminder 2',type:'date', optional: true},
+        {k:'reminder3',label:'Reminder 3',type:'date', optional: true},
+        {k:'documentsReceived',label:'Documents Received',type:'date', optional: true},
+        {k:'sentHigher',label:'Sent to Higher Office',type:'date', optional: true},
+        {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
+        {k:'remarks',label:'Remarks',type:'textarea', full:true}
+    ]},
     { id:'wmc', title:'Welfare Management Committee (WMC)', icon:'users', subSections:[
-        { id:'wmc_medical', title:'Medical Financial Assistance', key:'welfare_wmc_medical', icon:'badge-dollar', fields:[
+        { id:'wmc_medical', title:'Medical Financial Assistance', key:'welfare_wmc_medical', icon:'dollar-sign', fields:[
+            {k:'diaryNo',label:'Diary No.',type:'number'},
             {k:'dateReceived',label:'Date Received',type:'date'},
             {k:'applicantName',label:'Applicant Name',type:'text'},
             {k:'subject',label:'Subject',type:'text'},
@@ -239,6 +302,7 @@ const SECTIONS = [
             {k:'remarks',label:'Remarks',type:'textarea', full:true}
         ]},
         { id:'wmc_financial', title:'Financial Assistance', key:'welfare_wmc_financial', icon:'wallet', fields:[
+            {k:'diaryNo',label:'Diary No.',type:'number'},
             {k:'dateReceived',label:'Date Received',type:'date'},
             {k:'applicantName',label:'Applicant Name',type:'text'},
             {k:'subject',label:'Subject',type:'text'},
@@ -249,6 +313,7 @@ const SECTIONS = [
             {k:'remarks',label:'Remarks',type:'textarea', full:true}
         ]},
         { id:'wmc_other', title:'Other', key:'welfare_wmc_other', icon:'file-text', fields:[
+            {k:'diaryNo',label:'Diary No.',type:'number'},
             {k:'dateReceived',label:'Date Received',type:'date'},
             {k:'applicantName',label:'Applicant Name',type:'text'},
             {k:'subject',label:'Subject',type:'text'},
@@ -259,6 +324,7 @@ const SECTIONS = [
             {k:'remarks',label:'Remarks',type:'textarea', full:true}
         ]},
         { id:'wmc_funds', title:'Add Funds', key:'welfare_wmc_funds', icon:'dollar-sign', fields:[
+            {k:'diaryNo',label:'Diary No.',type:'number'},
             {k:'chequeNumber',label:'Cheque Number',type:'text'},
             {k:'chequeDate',label:'Cheque Date',type:'date'},
             {k:'letterNumber',label:'Letter Number',type:'text'},
@@ -271,13 +337,13 @@ const SECTIONS = [
 ];
 
 const STORAGE_ROOT = 'welfare_multi_v3';
-const AUTH_STORAGE = 'welfare_auth';
 // NEW GLOBAL STATE VARIABLES
 let state = {}, activeId = 'dashboard', subActiveId = null, filterStatus = null, selectedIndex = null;
 let isSearchMode = false; // Flag to track if the dedicated search results view is active
-let currentTheme = 'dark';
+let currentTheme = localStorage.getItem('theme') || 'dark';
 let currentFontSize = localStorage.getItem('fontSize') || 'text-base';
 let isMenuOpen = false;
+let notifications = [];
 
 /* ---------- Global Elements ---------- */
 const sidebarEl = document.querySelector('.sidebar');
@@ -294,6 +360,12 @@ const appContent = document.getElementById('appContent');
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
 const logoutBtn = document.getElementById('logoutBtn');
+const notifyBtn = document.getElementById('notifyBtn');
+const notifyDropdown = document.getElementById('notifyDropdown');
+const notifyList = document.getElementById('notifyList');
+const notifyCount = document.getElementById('notifyCount');
+const clearNotifs = document.getElementById('clearNotifs');
+const themeToggle = document.getElementById('themeToggle');
 
 /* ---------- Utility Functions ---------- */
 function debounce(func, wait) {
@@ -322,10 +394,31 @@ function todayISO() {
     return d.toISOString().slice(0, 10);
 }
 
-// ... (loadState and saveState functions remain the same) ...
+function dateDiff(date1, date2) {
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+}
+
+// Beep function
+const myAudioContext = new AudioContext();
+function beep(duration = 200, frequency = 440, volume = 100) {
+    return new Promise((resolve) => {
+        let oscillatorNode = myAudioContext.createOscillator();
+        let gainNode = myAudioContext.createGain();
+        oscillatorNode.connect(gainNode);
+        oscillatorNode.frequency.value = frequency;
+        oscillatorNode.type = "square";
+        gainNode.connect(myAudioContext.destination);
+        gainNode.gain.value = volume * 0.01;
+        oscillatorNode.start(myAudioContext.currentTime);
+        oscillatorNode.stop(myAudioContext.currentTime + duration * 0.001);
+        oscillatorNode.onended = resolve;
+    });
+}
+
 async function loadState() {
     try {
-        // Assuming Firebase is initialized elsewhere or will fail gracefully
         if (typeof db !== 'undefined' && typeof doc !== 'undefined' && typeof collection !== 'undefined' && typeof getDoc !== 'undefined') {
             const docRef = doc(collection(db, 'app_states'), 'default');
             const snap = await getDoc(docRef);
@@ -350,11 +443,15 @@ async function loadState() {
             });
         }
     });
+    if (!state.notifications) state.notifications = [];
+    notifications = state.notifications;
+    updateNotifyCount();
     applyTheme(currentTheme);
     applyFontSize(currentFontSize);
 }
 
 function saveState() {
+    state.notifications = notifications;
     try {
         if (typeof db !== 'undefined' && typeof doc !== 'undefined' && typeof collection !== 'undefined' && typeof setDoc !== 'undefined') {
             const docRef = doc(collection(db, 'app_states'), 'default');
@@ -366,60 +463,184 @@ function saveState() {
         console.error("Error saving state:", e);
     }
 }
-// ... (loadState and saveState functions remain the same) ...
-
 
 /* ---------- Login & Logout Logic ---------- */
-// ... (initAuth function remains the same) ...
 async function initAuth() {
-    // ... (initAuth logic) ...
-    const defaultCredentials = { username: 'admin', password: 'welfare123' };
-    if (!localStorage.getItem(AUTH_STORAGE)) {
-        localStorage.setItem(AUTH_STORAGE, JSON.stringify(defaultCredentials));
-    }
-
-    if (sessionStorage.getItem('welfare_logged_in') === 'true') {
-        loginPage.classList.add('hidden');
-        appContent.classList.remove('hidden');
-        await loadState();
-        buildMenu();
-        renderContent();
-        applyLayout();
-    } else {
-        loginPage.classList.remove('hidden');
-        appContent.classList.add('hidden');
-    }
-
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const stored = JSON.parse(localStorage.getItem(AUTH_STORAGE));
-
-        if (username === stored.username && password === stored.password) {
-            sessionStorage.setItem('welfare_logged_in', 'true');
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
             loginPage.classList.add('hidden');
             appContent.classList.remove('hidden');
             await loadState();
             buildMenu();
             renderContent();
             applyLayout();
+            requestNotificationPermission();
+            setInterval(checkNotifications, 60000); // Check every minute
+            checkNotifications(); // Initial check
+            initNotifyEvents();
         } else {
+            loginPage.classList.remove('hidden');
+            appContent.classList.add('hidden');
+        }
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            loginError.textContent = 'Invalid email or password';
             loginError.classList.remove('hidden');
         }
     });
 
-    logoutBtn.addEventListener('click', () => {
-        sessionStorage.removeItem('welfare_logged_in');
-        loginPage.classList.remove('hidden');
-        appContent.classList.add('hidden');
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        loginError.classList.add('hidden');
+    document.getElementById('forgotPassword').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const resetEmail = prompt('Enter your email to reset password:');
+        if (resetEmail) {
+            try {
+                await sendPasswordResetEmail(auth, resetEmail);
+                alert('Password reset email sent. Check your inbox.');
+            } catch (error) {
+                alert('Failed to send reset email. Please try again.');
+            }
+        }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await signOut(auth);
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            loginError.classList.add('hidden');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
     });
 }
+
+/* ---------- Notification System ---------- */
+function requestNotificationPermission() {
+    if (!("Notification" in window)) return;
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+    }
+}
+
+function addNotification(message, sectionKey, recordIndex) {
+    const newNotif = {
+        id: Date.now(),
+        message,
+        sectionKey,
+        recordIndex,
+        createdAt: todayISO()
+    };
+    notifications.unshift(newNotif); // Add to front
+    saveState();
+    updateNotifyCount();
+    renderNotifications();
+    showDesktopNotification(message);
+    beep();
+}
+
+function showDesktopNotification(message) {
+    if (Notification.permission === "granted") {
+        new Notification('Welfare Diary Notification', { body: message });
+    }
+}
+
+function updateNotifyCount() {
+    const count = notifications.length;
+    notifyCount.textContent = count;
+    notifyCount.classList.toggle('hidden', count === 0);
+}
+
+function renderNotifications() {
+    notifyList.innerHTML = '';
+    notifications.forEach(notif => {
+        const li = document.createElement('li');
+        li.className = 'p-3 hover:bg-[var(--hover-bg)] cursor-pointer';
+        li.innerHTML = `
+            <div class="flex justify-between">
+                <span>${notif.message}</span>
+                <button data-notif-id="${notif.id}" class="text-red-500 hover:text-red-700" aria-label="Delete notification"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+        `;
+        li.addEventListener('click', () => {
+            selectRowAndNavigate(notif.sectionKey, notif.recordIndex);
+            notifyDropdown.classList.add('hidden');
+        });
+        notifyList.appendChild(li);
+    });
+    initializeIcons();
+}
+
+function initNotifyEvents() {
+    notifyBtn.addEventListener('click', () => {
+        notifyDropdown.classList.toggle('hidden');
+        if (!notifyDropdown.classList.contains('hidden')) {
+            renderNotifications();
+        }
+    });
+
+    notifyList.addEventListener('click', (e) => {
+        const delBtn = e.target.closest('button[data-notif-id]');
+        if (delBtn) {
+            const id = Number(delBtn.dataset.notifId);
+            notifications = notifications.filter(n => n.id !== id);
+            saveState();
+            renderNotifications();
+            updateNotifyCount();
+            e.stopPropagation();
+        }
+    });
+
+    clearNotifs.addEventListener('click', () => {
+        notifications = [];
+        saveState();
+        renderNotifications();
+        updateNotifyCount();
+    });
+}
+
+function checkNotifications() {
+    const today = todayISO();
+    const allSections = getAllSectionsWithKey();
+    const lastPendingCheck = localStorage.getItem('lastPendingCheck') || '';
+    const isNewDay = lastPendingCheck !== today;
+
+    allSections.forEach(sec => {
+        const arr = state[sec.key] || [];
+        arr.forEach((rec, idx) => {
+            if (rec.status === 'Pending') {
+                if (isNewDay) {
+                    addNotification(`Letter pending: ${rec.applicantName || rec.subject || 'Entry'} in ${sec.title}`, sec.key, idx);
+                }
+            }
+
+            if (sec.fields.some(f => f.k === 'missing1')) {
+                if (rec.missing1 && !rec.reminder1 && dateDiff(rec.missing1, today) >= 7 && !rec.documentsReceived && rec.status === 'Pending') {
+                    addNotification(`Time for Reminder 1 on ${rec.applicantName || rec.subject || 'Entry'} in ${sec.title}`, sec.key, idx);
+                }
+                if (rec.reminder1 && !rec.reminder2 && dateDiff(rec.reminder1, today) >= 7 && !rec.documentsReceived && rec.status === 'Pending') {
+                    addNotification(`Time for Reminder 2 on ${rec.applicantName || rec.subject || 'Entry'} in ${sec.title}`, sec.key, idx);
+                }
+                if (rec.reminder2 && !rec.reminder3 && dateDiff(rec.reminder2, today) >= 7 && !rec.documentsReceived && rec.status === 'Pending') {
+                    addNotification(`Time for Reminder 3 on ${rec.applicantName || rec.subject || 'Entry'} in ${sec.title}`, sec.key, idx);
+                }
+            }
+        });
+    });
+
+    if (isNewDay) {
+        localStorage.setItem('lastPendingCheck', today);
+    }
+}
+
 /* ---------- Menu Toggle Logic ---------- */
-// ... (applyLayout, updateMenuButtonIcon, toggleMenu functions remain the same) ...
 const DESKTOP_BREAKPOINT = 768;
 
 function applyLayout() {
@@ -448,7 +669,7 @@ function toggleMenu() {
         applyLayout();
     }
 }
-// ... (Modal Logic remains the same) ...
+
 const modalEl = document.getElementById('customModal');
 const modalTitleEl = document.getElementById('modalTitle');
 const modalMessageEl = document.getElementById('modalMessage');
@@ -488,12 +709,18 @@ function showModal(title, message, options = {}) {
         });
     });
 }
-/* ---------- Theme & Font Management ---------- */
-// ... (applyTheme, applyFontSize functions remain the same) ...
+
 function applyTheme(theme) {
-    currentTheme = 'dark';
-    localStorage.setItem('theme', 'dark');
-    document.documentElement.classList.remove('dark');
+    currentTheme = theme;
+    localStorage.setItem('theme', theme);
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+    updateThemeIcon();
+}
+
+function updateThemeIcon() {
+    themeToggle.innerHTML = currentTheme === 'dark' ? `<i data-lucide="moon" class="w-5 h-5"></i>` : `<i data-lucide="sun" class="w-5 h-5"></i>`;
+    initializeIcons();
 }
 
 function applyFontSize(size) {
@@ -501,8 +728,7 @@ function applyFontSize(size) {
     localStorage.setItem('fontSize', size);
     document.body.className = size;
 }
-/* ---------- UI Build ---------- */
-// ... (buildMenu function remains the same) ...
+
 function buildMenu() {
     menuEl.innerHTML = '';
     SECTIONS.forEach(s => {
@@ -530,33 +756,23 @@ function buildMenu() {
     initializeIcons();
 }
 
-/**
- * MODIFIED renderContent function to handle the new search view state.
- */
 function renderContent() {
-    // 1. Toggle visibility and style for topBar elements based on the active tab/search mode
     const isDataTab = activeId !== 'dashboard' && activeId !== 'settings';
     
-    // Adjust search bar width: Small (md:w-[350px]) on dashboard/settings, full-width (w-full) on data tabs
     searchInput.classList.toggle('md:w-[350px]', !isDataTab); 
     searchInput.classList.toggle('w-full', isDataTab);
     
-    // Hide Export button unless it's a data tab and NOT in search mode
     tabActions.classList.toggle('hidden', !isDataTab || isSearchMode);
 
-    // 2. Control Content Areas based on Search Mode
     if (isSearchMode) {
-        // If in search mode (triggered by typing/Enter), hide regular content and show search results container
         contentArea.classList.add('hidden');
         searchDedicatedResults.classList.remove('hidden');
-        return; // Stop here, search results are already rendered
+        return;
     }
 
-    // If not in search mode, ensure regular content area is visible
     contentArea.classList.remove('hidden');
     searchDedicatedResults.classList.add('hidden');
     
-    // 3. Render the content for the active tab (original logic)
     if (activeId === 'dashboard') {
         renderDashboard();
     } else if (activeId === 'settings') {
@@ -573,9 +789,6 @@ function renderContent() {
     }
 }
 
-
-/* ---------- Helper Functions ---------- */
-// ... (getCurrentSec, setSubActiveTab, setSubActiveTabWithFilter, clearFilter functions remain the same) ...
 function getCurrentSec() {
     let sec = SECTIONS.find(s => s.id === activeId);
     if (activeId === 'wmc' && subActiveId) {
@@ -602,8 +815,6 @@ function clearFilter() {
     renderContent();
 }
 
-/* ---------- Dashboard ---------- */
-// ... (renderDashboard, renderWMCSubDashboard, renderDashboardCard, animateCounter functions remain the same) ...
 function calculateDashboardData(sections) {
     const data = {};
     sections.forEach(sec => {
@@ -755,7 +966,7 @@ function renderWMCSubDashboard() {
                 legend: {
                     position: 'right',
                     labels: {
-                        color: '#FFFFFF',
+                        color: '#EDEDED',
                         font: { size: 10, weight: 'bold' },
                         boxWidth: 20,
                         boxHeight: 20,
@@ -773,8 +984,8 @@ function renderWMCSubDashboard() {
                 },
                 tooltip: {
                     backgroundColor: 'var(--card-bg)',
-                    titleColor: '#FFFFFF',
-                    bodyColor: '#FFFFFF',
+                    titleColor: '#EDEDED',
+                    bodyColor: '#EDEDED',
                     borderColor: 'var(--border-color)',
                     borderWidth: 1
                 }
@@ -782,7 +993,6 @@ function renderWMCSubDashboard() {
         }
     });
 
-    // Total Funds Pie Chart
     const totalSanctionedOverall = sanctionSubSecs.reduce((sum, sec) => sum + data[sec.id].totalSanctioned, 0);
     const totalFunds = state['welfare_wmc_funds'].reduce((sum, r) => sum + (Number(r.chequeAmount) || 0), 0);
     const remaining = totalFunds - totalSanctionedOverall;
@@ -808,7 +1018,7 @@ function renderWMCSubDashboard() {
                 legend: {
                     position: 'right',
                     labels: {
-                        color: '#FFFFFF',
+                        color: 'var(--text-primary)',
                         font: { size: 10, weight: 'bold' },
                         boxWidth: 20,
                         boxHeight: 20,
@@ -817,8 +1027,8 @@ function renderWMCSubDashboard() {
                 },
                 tooltip: {
                     backgroundColor: 'var(--card-bg)',
-                    titleColor: '#FFFFFF',
-                    bodyColor: '#FFFFFF',
+                    titleColor: 'var(--text-primary)',
+                    bodyColor: 'var(--text-primary)',
                     borderColor: 'var(--border-color)',
                     borderWidth: 1
                 }
@@ -826,13 +1036,12 @@ function renderWMCSubDashboard() {
         }
     });
 
-    // Fund Summary
     const fundSummaryHtml = `
         <h3 class="text-2xl font-semibold text-[var(--text-primary)] mb-4">Fund Summary</h3>
         <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
-            <p class="text-lg text-white mb-2">Total Funds Added: ${new Intl.NumberFormat('en-US').format(totalFunds)} PKR</p>
-            <p class="text-lg text-white mb-2">Total Sanctioned: ${new Intl.NumberFormat('en-US').format(totalSanctionedOverall)} PKR</p>
-            <p class="text-lg text-white">Remaining Funds: ${new Intl.NumberFormat('en-US').format(remaining)} PKR</p>
+            <p class="text-lg text-[var(--text-primary)] mb-2">Total Funds Added: ${new Intl.NumberFormat('en-US').format(totalFunds)} PKR</p>
+            <p class="text-lg text-[var(--text-primary)] mb-2">Total Sanctioned: ${new Intl.NumberFormat('en-US').format(totalSanctionedOverall)} PKR</p>
+            <p class="text-lg text-[var(--text-primary)]">Remaining Funds: ${new Intl.NumberFormat('en-US').format(remaining)} PKR</p>
         </div>
     `;
     document.getElementById('fundSummary').innerHTML = fundSummaryHtml;
@@ -875,7 +1084,6 @@ function setActiveTab(id) {
     activeId = id;
     subActiveId = null;
     filterStatus = null;
-    // Clear search mode and search input when navigating tabs
     isSearchMode = false;
     searchInput.value = ''; 
     buildMenu();
@@ -883,14 +1091,11 @@ function setActiveTab(id) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ---------- Data Entry Section ---------- */
 function renderSection(sec) {
     selectedIndex = null;
     contentArea.innerHTML = '';
-    // This part of the contentArea is dedicated to table filtering when the user is on a data tab
     const q = searchInput.value.trim().toLowerCase(); 
     if (q) {
-        // If there's text in the search bar, display the local filter notification
         contentArea.insertAdjacentHTML('beforeend', `
             <div class="bg-[var(--card-bg)] shadow-md rounded-lg p-4 mb-4">
                 <div class="flex items-center justify-between">
@@ -915,8 +1120,8 @@ function renderSection(sec) {
             <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
                 <h2 class="text-2xl font-semibold mb-2 text-[var(--text-primary)]">${sec.title}</h2>
                 <div class="text-sm text-[var(--text-secondary)] mb-4">Use the form below to add / edit entries.</div>
-                <form id="entryForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div class="col-span-1 sm:col-span-2 lg:col-span-3 flex justify-end gap-3 mt-4">
+                <form id="entryForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                    <div class="col-span-1 sm:col-span-2 lg:col-span-2 flex justify-end gap-3 mt-4">
                         <button type="button" id="resetForm" class="bg-gray-600 text-[var(--text-primary)] px-4 py-2 rounded-lg hover:bg-gray-500" aria-label="Reset form">Reset Form</button>
                         <button type="submit" class="bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700" aria-label="Submit entry"><span id="submitText">Add New Entry</span></button>
                     </div>
@@ -927,14 +1132,14 @@ function renderSection(sec) {
         const form = document.getElementById('entryForm');
         sec.fields.forEach(f => {
             const wrap = document.createElement('div');
-            wrap.className = `flex flex-col gap-2 ${f.full ? 'col-span-1 sm:col-span-2 lg:col-span-3' : ''}`;
+            wrap.className = `flex flex-col gap-2 ${f.full ? 'col-span-1 sm:col-span-2 lg:col-span-2' : ''}`;
             const lbl = document.createElement('label');
             lbl.textContent = f.label;
             lbl.setAttribute('for', f.k);
             lbl.className = 'text-sm font-semibold text-[var(--text-secondary)]';
             wrap.appendChild(lbl);
             let inp;
-            const inputClasses = 'p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all';
+            const inputClasses = 'w-full p-3 rounded-lg border border-[var(--border-color)] bg-[#222222] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--primary-color)] focus:border-[var(--primary-color)] transition-all';
             if (f.type === 'select') {
                 inp = document.createElement('select');
                 inp.className = inputClasses;
@@ -990,7 +1195,7 @@ function renderSection(sec) {
         document.getElementById('resetForm').addEventListener('click', () => resetForm(sec));
     }
     const tableCardHtml = `
-        <div class="overflow-x-auto rounded-lg border border-[var(--border-color)] shadow-lg max-w-full">
+        <div class="max-h-[70vh] overflow-auto rounded-lg border border-[var(--border-color)] shadow-lg max-w-full">
             <table id="dataTable" class="w-full bg-[var(--card-bg)]">
                 <thead>
                     <tr class="bg-[#222222] text-left text-xs uppercase text-[var(--text-secondary)] font-semibold">
@@ -1010,7 +1215,7 @@ function renderSection(sec) {
     const headerKeys = ['sr', ...allFields.map(f => f.k), 'actions'];
     const displayHeaders = headerKeys.map(k => ({
         k,
-        label: k === 'sr' ? 'Sr#' : (k === 'actions' ? 'Actions' : fieldLabels[k] || k.charAt(0).toUpperCase() + k.slice(1))
+        label: k === 'sr' ? 'Sr#' : (k === 'actions' ? 'Actions' : (fieldLabels[k] || k.charAt(0).toUpperCase() + k.slice(1)))
     }));
     theadRow.innerHTML = displayHeaders.map(h => `<th class="p-3">${h.label}</th>`).join('');
     renderTable(sec, displayHeaders, hasStatus);
@@ -1068,10 +1273,8 @@ function renderTable(sec, displayHeaders, hasStatus) {
         hay = hay.toLowerCase();
         
         let showRow = true;
-        // Apply text filter
         if (q && !hay.includes(q)) showRow = false;
 
-        // Apply status filter
         if (showRow && filterStatus && hasStatus) {
             if (filterStatus === 'Rejected') {
                 showRow = row.status === 'Rejected' || row.status === 'Objection';
@@ -1134,19 +1337,10 @@ function resetForm(sec) {
     Array.from(document.querySelectorAll('#dataTableBody tr')).forEach(r => r.classList.remove('ring-2', 'ring-[var(--primary-color)]'));
 }
 
-/* ---------- Settings Page ---------- */
-// ... (renderSettings, renderFontSizeButton functions remain the same) ...
 function renderSettings() {
     contentArea.innerHTML = `
         <h2 class="text-3xl font-semibold text-[var(--text-primary)] mb-4">Application Settings</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
-                <div class="flex items-center gap-3 mb-4">
-                    <i data-lucide="moon" class="w-6 h-6 text-yellow-500"></i>
-                    <h3 class="text-xl font-semibold text-[var(--text-primary)]">Theme</h3>
-                </div>
-                <p class="text-[var(--text-secondary)] mb-4 text-sm">Application is running in Dark Minimalist mode. Light mode is under development.</p>
-            </div>
             <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
                 <div class="flex items-center gap-3 mb-4">
                     <i data-lucide="text-cursor" class="w-6 h-6 text-purple-500"></i>
@@ -1164,7 +1358,7 @@ function renderSettings() {
                     <i data-lucide="database" class="w-6 h-6 text-green-500"></i>
                     <h3 class="text-xl font-semibold text-[var(--text-primary)]">Export All Data (XLS)</h3>
                 </div>
-                <p class="text-[var(--text-secondary)] mb-4 text-sm">Download all sections into a single Excel file.</p>
+                <p class="text-[var(--text-secondary)] mb-4 text-sm">Download all all sections into a single Excel file.</p>
                 <button id="downloadAllXlsx" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500" aria-label="Export all data to Excel">
                     <i data-lucide="file-spreadsheet" class="w-5 h-5 inline mr-1"></i> Download All Data (XLS)
                 </button>
@@ -1177,16 +1371,6 @@ function renderSettings() {
                 <p class="text-[var(--text-secondary)] mb-4 text-sm">Restore data from a JSON file.</p>
                 <button id="importAll" class="w-full bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700" aria-label="Import JSON data">
                     <i data-lucide="file-json" class="w-5 h-5 inline mr-1"></i> Import JSON File
-                </button>
-            </div>
-            <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg p-4">
-                <div class="flex items-center gap-3 mb-4">
-                    <i data-lucide="rotate-ccw" class="w-6 h-6 text-red-500"></i>
-                    <h3 class="text-xl font-semibold text-[var(--text-primary)]">Clear All Data (Reset)</h3>
-                </div>
-                <p class="text-[var(--text-secondary)] mb-4 text-sm"><strong>WARNING:</strong> This will permanently delete all data!</p>
-                <button id="clearAll" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500" aria-label="Clear all data">
-                    <i data-lucide="trash-2" class="w-5 h-5 inline mr-1"></i> Clear All Data
                 </button>
             </div>
         </div>
@@ -1207,7 +1391,6 @@ function renderSettings() {
     });
     document.getElementById('downloadAllXlsx').addEventListener('click', downloadAllXlsx);
     document.getElementById('importAll').addEventListener('click', handleImport);
-    document.getElementById('clearAll').addEventListener('click', handleClearAll);
 }
 
 function renderFontSizeButton(size, label) {
@@ -1218,8 +1401,6 @@ function renderFontSizeButton(size, label) {
     `;
 }
 
-/* ---------- Data Export/Import/Clear ---------- */
-// ... (getAllSectionsWithKey, prepareRowsForSection, saveArrayAsFile, downloadAllXlsx, handleImport, handleClearAll functions remain the same) ...
 function getAllSectionsWithKey() {
     let all = [];
     SECTIONS.forEach(sec => {
@@ -1341,43 +1522,11 @@ function handleImport() {
     inp.click();
 }
 
-function handleClearAll() {
-    showModal('Confirm Reset', 'This will delete all data. Are you sure?', {
-        actions: [
-            { text: 'Cancel', value: false, style: 'bg-gray-600 text-[var(--text-primary)] px-4 py-2 rounded-lg hover:bg-gray-500' },
-            { text: 'Yes, Clear All', value: true, style: 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500' }
-        ]
-    }).then(result => {
-        if (result) {
-            state = {};
-            SECTIONS.forEach(sec => {
-                if (sec.key) state[sec.key] = [];
-                if (sec.subSections) sec.subSections.forEach(sub => state[sub.key] = []);
-            });
-            saveState();
-            buildMenu();
-            renderContent();
-            showModal('Data Cleared', 'All data deleted.', {
-                actions: [{ text: 'OK', value: true, style: 'bg-[var(--primary-color)] text-white px-4 py-2 rounded-lg hover:bg-blue-700' }]
-            });
-        }
-    });
-}
-
-/* ---------- NEW & MODIFIED SEARCH FEATURE (User Request) ---------- */
-
-/**
- * Navigates to the section corresponding to the key, sets the selectedIndex, 
- * rebuilds the view, and scrolls to the selected row.
- * @param {string} key - The state key (e.g., 'welfare_medical')
- * @param {number} index - The index of the record in the state array
- */
 function selectRowAndNavigate(key, index) {
     const allSections = getAllSectionsWithKey();
     const sec = allSections.find(s => s.key === key);
     if (!sec) return;
 
-    // Determine the correct activeId and subActiveId for navigation
     if (key.includes('welfare_wmc_')) {
         activeId = 'wmc';
         subActiveId = sec.id;
@@ -1388,15 +1537,12 @@ function selectRowAndNavigate(key, index) {
     
     selectedIndex = index;
     filterStatus = null;
-    isSearchMode = false; // Exit search mode
-    searchInput.value = ''; // Clear the input
+    isSearchMode = false;
+    searchInput.value = ''; 
 
-    // 1. Update the menu bar state
     buildMenu();
-    // 2. Render the section content, which will automatically load the record into the form
     renderContent(); 
 
-    // Wait for the DOM to update, then scroll the selected row into view
     setTimeout(() => {
         const targetRow = document.querySelector(`#dataTableBody tr:nth-child(${index + 1})`);
         if (targetRow) {
@@ -1404,58 +1550,46 @@ function selectRowAndNavigate(key, index) {
         }
     }, 100);
 }
-window.selectRowAndNavigate = selectRowAndNavigate; // Expose globally for onclick
+window.selectRowAndNavigate = selectRowAndNavigate;
 
-/**
- * Performs a search across all data sections, renders a dedicated results view, 
- * and controls the search mode.
- * @param {string} query - The search term.
- * @param {boolean} clearInput - If true, clears the input after results are rendered. (For Enter key press)
- */
 function performCrossTabSearch(query, clearInput) {
     const q = query.trim().toLowerCase();
     
     if (q.length === 0) {
-        // If query is empty, exit search mode and revert to the normal view
         isSearchMode = false;
-        if (clearInput) searchInput.value = ''; // Only clear if requested (e.g., by an Enter press on an empty field)
+        if (clearInput) searchInput.value = '';
         renderContent();
         return;
     }
 
-    // Enter search mode
     isSearchMode = true; 
     
-    // Clear input first if requested (User request: "enter krny k bad likha howa gyeb ho jye")
     if (clearInput) {
         searchInput.value = ''; 
     }
 
-    // Search logic
     const allSections = getAllSectionsWithKey();
     const searchResults = {};
     let totalResults = 0;
 
     allSections.forEach(sec => {
         const arr = state[sec.key] || [];
-        const matchingRecords = arr.map((row, originalIndex) => ({
+        const searchRecords = arr.map((row, originalIndex) => ({
             row,
             originalIndex,
-            // Create a searchable string from all fields
             hay: sec.fields.map(f => row[f.k] || '').join(' ').toLowerCase()
         })).filter(item => item.hay.includes(q));
 
-        if (matchingRecords.length > 0) {
+        if (searchRecords.length > 0) {
             searchResults[sec.id] = {
                 section: sec,
-                results: matchingRecords
+                results: searchRecords
             };
-            totalResults += matchingRecords.length;
+            totalResults += searchRecords.length;
         }
     });
 
-    // RENDER THE SEARCH RESULTS
-    renderContent(); // Trigger the content toggle logic (hides contentArea, shows searchDedicatedResults)
+    renderContent(); 
     
     const resultsContainer = searchDedicatedResults;
     resultsContainer.innerHTML = '';
@@ -1475,7 +1609,6 @@ function performCrossTabSearch(query, clearInput) {
             const sec = item.section;
             const results = item.results;
             
-            // Build a mini table for each section
             let sectionHtml = `
                 <div class="bg-[var(--card-bg)] shadow-lg border border-[var(--border-color)] rounded-lg overflow-hidden">
                     <h3 class="text-xl font-bold p-3 bg-[#222222] text-[var(--text-primary)]">${sec.title} (${results.length} result${results.length !== 1 ? 's' : ''})</h3>
@@ -1522,29 +1655,20 @@ function performCrossTabSearch(query, clearInput) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-
-/* ---------- Initialization ---------- */
 window.onload = async function() {
     
-    // 1. New Search Logic (Real-time and Enter-key)
-    
-    // Real-time cross-tab search on 'input' event (debounced for performance)
     searchInput.addEventListener('input', debounce(() => {
         const query = searchInput.value;
         const sec = getCurrentSec();
 
-        // If on Dashboard or actively searching, use the cross-tab search (false = don't clear input)
         if (activeId === 'dashboard' || isSearchMode || query.length > 0) {
             performCrossTabSearch(query, false); 
         } 
-        // If on a data tab and only clearing the input to revert to un-filtered table
         else if (sec && sec.key && query.length === 0) {
             isSearchMode = false;
-            renderContent(); // Re-render the tab content to show the unfitered table
+            renderContent();
         }
-        // If on a data tab and typing (current-tab filtering only, but only if not forced into cross-tab search mode)
         else if (sec && sec.key) {
-            // This re-runs the local table filter logic inside renderTable for current tab only
             const allFields = sec.fields;
             const hasStatus = allFields.some(f => f.k === 'status');
             const fieldLabels = {};
@@ -1559,29 +1683,29 @@ window.onload = async function() {
 
     }, 300));
     
-    // Dedicated cross-tab search on 'Enter' key press (User requested: clears input and shows final result)
     searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault(); 
-            // true = clear input after search (final result view)
             performCrossTabSearch(searchInput.value, true); 
         }
     });
 
-    // 2. Existing Initialization
     menuToggleEl.addEventListener('click', toggleMenu);
     window.addEventListener('resize', applyLayout);
+    themeToggle.addEventListener('click', () => {
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+    });
     await initAuth();
 };
 </script>
 
 
 <script type="module">
-  // ✅ Import required SDKs
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getFirestore, collection, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getFirestore, collection, getDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
-  // ✅ Your Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyCVj-Eb9wNAaqwFyGdRgC7uyR24O2jjOIw",
     authDomain: "spuwelfarediary.firebaseapp.com",
@@ -1593,11 +1717,17 @@ window.onload = async function() {
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
   window.db = db;
+  window.auth = auth;
   window.getDoc = getDoc;
   window.setDoc = setDoc;
   window.doc = doc;
   window.collection = collection;
+  window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+  window.signOut = signOut;
+  window.onAuthStateChanged = onAuthStateChanged;
+  window.sendPasswordResetEmail = sendPasswordResetEmail;
  </script>
 
 </body>
