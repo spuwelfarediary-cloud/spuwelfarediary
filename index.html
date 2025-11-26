@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welfare Branch Diary</title>
+    <title>Welfare Branch Diary (Secure)</title>
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -41,6 +41,7 @@
             background-color: var(--content-bg);
             color: var(--text-primary);
             overflow: hidden;
+            user-select: none; /* Make text unselectable for basic protection */
         }
 
         .sidebar-container {
@@ -89,7 +90,7 @@
         }
     </style>
 </head>
-<body class="text-base h-screen flex flex-col">
+<body class="text-base h-screen flex flex-col" oncontextmenu="return false;">
     
     <div id="loginPage" class="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--content-bg)]">
         <div class="bg-[var(--card-bg)] p-8 rounded-xl shadow-2xl max-w-md w-full transform transition-all hover:-translate-y-1">
@@ -109,6 +110,7 @@
                 <button type="submit" class="w-full bg-[var(--primary-color)] text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-all">Login</button>
             </form>
             <p id="loginError" class="text-red-500 text-sm mt-4 hidden">Invalid email or password</p>
+            <p id="authError" class="text-red-500 text-sm mt-2 hidden">Access Restricted: You are not an Admin.</p>
         </div>
     </div>
 
@@ -149,10 +151,7 @@
                         placeholder="Search employees, cases, or records..." aria-label="Search entries" />
                     <div class="flex items-center gap-2 justify-end">
                          <div id="tabActions" class="hidden"> 
-                            <button id="exportTabXlsx" class="flex items-center gap-1 px-3 py-2 rounded-lg bg-gray-700 text-[var(--text-primary)] text-sm hover:bg-gray-600 transition-all">
-                                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> <span class="hidden sm:inline">Export Tab</span>
-                            </button>
-                        </div>
+                            </div>
                         <div id="notifyContainer" class="relative">
                             <button id="notifyBtn" class="p-2 rounded-full bg-gray-700 text-[var(--text-primary)] hover:bg-gray-600">
                                 <i data-lucide="bell" class="w-5 h-5"></i>
@@ -187,7 +186,10 @@
     </div>
 
 <script>
-/* ---------- Configuration ---------- */
+/* ---------- CONFIGURATION & SECURITY CONSTANTS ---------- */
+// 🛠️ IMPORTANT: Replace this with your actual Admin UID from Firebase Console
+const ADMIN_UID = "uNM86CoUooP4q1zK0o4HvYpQuPv1"; 
+
 const SECTIONS = [
     { id:'dashboard', title:'Dashboard', icon:'layout-dashboard' },
     { id:'medical', title:'Medical Financial Assistance', key:'welfare_medical', icon:'dollar-sign', fields:[
@@ -274,7 +276,6 @@ const SECTIONS = [
             {k:'fromOffice',label:'From Office',type:'text'},
             {k:'claimAmount',label:'Claim Amount',type:'number'},
             {k:'sanctionedAmount',label:'Sanctioned Amount',type:'number'},
-            // NEW FIELDS ADDED HERE
             {k:'chequeNo',label:'Cheque No.',type:'text'},
             {k:'chequeDate',label:'Cheque Date',type:'date'},
             {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
@@ -288,7 +289,6 @@ const SECTIONS = [
             {k:'fromOffice',label:'From Office',type:'text'},
             {k:'claimAmount',label:'Claim Amount',type:'number'},
             {k:'sanctionedAmount',label:'Sanctioned Amount',type:'number'},
-            // NEW FIELDS ADDED HERE
             {k:'chequeNo',label:'Cheque No.',type:'text'},
             {k:'chequeDate',label:'Cheque Date',type:'date'},
             {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
@@ -302,7 +302,6 @@ const SECTIONS = [
             {k:'fromOffice',label:'From Office',type:'text'},
             {k:'claimAmount',label:'Claim Amount',type:'number'},
             {k:'sanctionedAmount',label:'Sanctioned Amount',type:'number'},
-            // NEW FIELDS ADDED HERE
             {k:'chequeNo',label:'Cheque No.',type:'text'},
             {k:'chequeDate',label:'Cheque Date',type:'date'},
             {k:'status',label:'Status',type:'select',options:['Pending','Sent','Approved','Rejected','Objection']},
@@ -343,6 +342,7 @@ const loginPage = document.getElementById('loginPage');
 const appContent = document.getElementById('appContent');
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
+const authError = document.getElementById('authError');
 const logoutBtn = document.getElementById('logoutBtn');
 const notifyBtn = document.getElementById('notifyBtn');
 const notifyDropdown = document.getElementById('notifyDropdown');
@@ -356,7 +356,58 @@ const modalMessageEl = document.getElementById('modalMessage');
 const modalActionsEl = document.getElementById('modalActions');
 const modalContentEl = document.getElementById('modalContent');
 
-/* ---------- Utility Functions ---------- */
+/* ---------- SECURITY FUNCTIONS & UTILS ---------- */
+
+// 🔹 XSS Protection: Clean all inputs
+function cleanInput(value) {
+    if (typeof value !== 'string') return value;
+    return value
+        .trim()
+        .replace(/<[^>]*>?/gm, "") // Remove HTML tags
+        .replace(/[{}$<>]/g, ""); // Remove specific dangerous chars
+}
+
+// 🔹 Strong Input Validation
+function validateInputs(record, fields) {
+    for (const f of fields) {
+        const val = record[f.k];
+        
+        // 1. Required Fields check
+        if ((f.type === 'date' || f.k === 'applicantName' || f.k === 'status') && !f.optional) {
+             if (!val || val === '') return `${f.label} is required.`;
+        }
+
+        // 2. Numeric Checks (Amount cannot be negative)
+        if ((f.k.toLowerCase().includes('amount') || f.k.toLowerCase().includes('diary')) && val) {
+            if (isNaN(val)) return `${f.label} must be a number.`;
+            if (Number(val) < 0) return `${f.label} cannot be negative.`;
+        }
+        
+        // 3. CNIC Validation (13 Digits)
+        if ((f.k.toLowerCase().includes('cnic') || f.k.toLowerCase().includes('identity')) && val) {
+            if (!/^\d{13}$/.test(val)) return "CNIC must be exactly 13 digits (numbers only).";
+        }
+
+        // 4. Phone Validation (11 Digits)
+        if ((f.k.toLowerCase().includes('phone') || f.k.toLowerCase().includes('contact')) && val) {
+            if (!/^\d{11}$/.test(val)) return "Phone number must be exactly 11 digits.";
+        }
+
+        // 5. Dropdown Status Validation
+        if (f.type === 'select' && f.options && val) {
+            if (!f.options.includes(val)) return `Invalid value for ${f.label}.`;
+        }
+    }
+    return null; // No errors
+}
+
+// 🔹 Disable Inspect Element (Basic Deterrent)
+document.onkeydown = function (e) {
+    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key === "I")) {
+        return false;
+    }
+};
+
 function debounce(func, wait) {
     let timeout;
     return function (...args) {
@@ -410,8 +461,10 @@ async function loadState() {
         }
     } catch (e) {
         console.error("Error loading state:", e);
+        showModal('Connection Error', 'Failed to load data from server. Please check internet connection.');
         state = {};
     }
+    // Ensure structure exists
     SECTIONS.forEach(sec => {
         if (sec.key && !state[sec.key]) state[sec.key] = [];
         if (sec.subSections) {
@@ -427,33 +480,54 @@ async function loadState() {
     applyFontSize(currentFontSize);
 }
 
-function saveState() {
+async function saveState() {
     state.notifications = notifications;
     try {
         if (typeof db !== 'undefined' && typeof doc !== 'undefined') {
+            // 🔥 6. Firestore Error Handling (Try/Catch wrapper for writes)
             const docRef = doc(collection(db, 'app_states'), 'default');
-            setDoc(docRef, state);
+            await setDoc(docRef, state);
         }
     } catch (e) {
         console.error("Error saving state:", e);
+        showModal('Save Failed', 'Could not save data to server. Please check your internet connection.');
+        throw e; // Stop execution
     }
 }
 
-/* ---------- Auth ---------- */
+/* ---------- Auth (Enhanced Security) ---------- */
 async function initAuth() {
     onAuthStateChanged(auth, async (user) => {
+        // 🔥 1. ADMIN SECURITY CHECK (Critical)
         if (user) {
-            loginPage.classList.add('hidden');
-            appContent.classList.remove('hidden');
-            appContent.classList.add('flex');
-            await loadState();
-            buildMenu();
-            renderContent();
-            requestNotificationPermission();
-            setInterval(checkNotifications, 60000);
-            checkNotifications();
-            initNotifyEvents();
+            if (user.uid === ADMIN_UID) {
+                // ✅ User is Admin - Allow Access
+                loginPage.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                appContent.classList.add('flex');
+                
+                await loadState();
+                buildMenu();
+                renderContent();
+                requestNotificationPermission();
+                
+                setInterval(checkNotifications, 60000);
+                checkNotifications();
+                initNotifyEvents();
+            } else {
+                // ⛔ User Logged in BUT NOT ADMIN
+                console.warn("Unauthorized access attempt by UID:", user.uid);
+                appContent.classList.add('hidden');
+                appContent.classList.remove('flex');
+                loginPage.classList.remove('hidden');
+                authError.classList.remove('hidden');
+                authError.textContent = "SECURITY ALERT: Unauthorized UID. You are not an Admin.";
+                
+                // Force Logout immediately
+                await signOut(auth);
+            }
         } else {
+            // No User
             loginPage.classList.remove('hidden');
             appContent.classList.add('hidden');
             appContent.classList.remove('flex');
@@ -467,6 +541,7 @@ async function initAuth() {
         try {
             await signInWithEmailAndPassword(auth, email, password);
         } catch (error) {
+            console.error(error);
             loginError.textContent = 'Invalid email or password';
             loginError.classList.remove('hidden');
         }
@@ -490,6 +565,7 @@ async function initAuth() {
         document.getElementById('email').value = '';
         document.getElementById('password').value = '';
         loginError.classList.add('hidden');
+        authError.classList.add('hidden');
     });
 }
 
@@ -680,6 +756,9 @@ function renderContent() {
     searchInput.classList.toggle('w-full', isDataTab);
     tabActions.classList.toggle('hidden', !isDataTab || isSearchMode);
 
+    // Clear previous tab actions content
+    tabActions.innerHTML = '';
+    
     if (isSearchMode) {
         contentArea.classList.add('hidden');
         searchDedicatedResults.classList.remove('hidden');
@@ -694,11 +773,33 @@ function renderContent() {
         if (subActiveId) {
             const subSec = SECTIONS.find(s => s.id === 'wmc').subSections.find(s => s.id === subActiveId);
             renderSection(subSec);
+            
+            // Add Export Button for WMC Sub-Sections
+            if (subSec.key) {
+                 tabActions.innerHTML = `
+                    <button onclick="exportCurrentTabXlsx()" class="p-2 rounded-full bg-green-600 text-white hover:bg-green-700 transition-all" title="Export This Tab">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                    </button>
+                 `;
+                 initializeIcons();
+            }
+            
         } else {
             renderWMCSubDashboard();
         }
     } else {
-        renderSection(SECTIONS.find(x => x.id === activeId));
+        const sec = SECTIONS.find(x => x.id === activeId);
+        renderSection(sec);
+        
+        // Add Export Button for main sections
+        if (sec.key) {
+            tabActions.innerHTML = `
+                <button onclick="exportCurrentTabXlsx()" class="p-2 rounded-full bg-green-600 text-white hover:bg-green-700 transition-all" title="Export This Tab">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                </button>
+            `;
+            initializeIcons();
+        }
     }
 }
 
@@ -750,7 +851,6 @@ function renderDashboard() {
     `;
     const container = document.getElementById('dashboardContainer');
     
-    // MODIFIED: Updated this section to use colorful tabs like WMC
     leafSections.forEach(sec => {
         const d = data[sec.id];
         container.insertAdjacentHTML('beforeend', `
@@ -780,7 +880,6 @@ function renderDashboard() {
 }
 
 function renderDashboardCard(secId, title, count, icon, classes) {
-    // Kept for reference, but main logic now uses inline HTML above
     return `
         <div class="p-2 rounded border border-[var(--border-color)] bg-[#262626] flex flex-col items-center justify-center text-center">
             <span class="text-2xl font-bold text-[var(--text-primary)]">${count}</span>
@@ -885,7 +984,6 @@ function renderSection(sec) {
     contentArea.innerHTML = '';
     const q = searchInput.value.trim().toLowerCase();
     
-    // Filter Banner
     if (q || filterStatus) {
         contentArea.insertAdjacentHTML('beforeend', `
             <div class="bg-[var(--card-bg)] shadow p-3 rounded-lg flex justify-between items-center">
@@ -897,7 +995,6 @@ function renderSection(sec) {
         `);
     }
 
-    // Form
     if (!filterStatus && !q) {
         contentArea.insertAdjacentHTML('beforeend', `
             <div class="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg p-5 shadow-lg">
@@ -923,23 +1020,37 @@ function renderSection(sec) {
                 </form>
             </div>
         `);
-        document.getElementById('entryForm').addEventListener('submit', (e) => {
+        document.getElementById('entryForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const rec = {};
+            
+            // Collect & Clean Data (🔥 2. Input Sanitization applied on save)
             sec.fields.forEach(f => {
                 const el = document.getElementById(f.k);
-                if(el) rec[f.k] = el.value; 
+                if(el) rec[f.k] = cleanInput(el.value); 
             });
+
+            // 🔹 Validation Check (🔥 3. Strong Validation)
+            const errorMsg = validateInputs(rec, sec.fields);
+            if (errorMsg) {
+                showModal('Validation Error', errorMsg);
+                return;
+            }
+
             const arr = state[sec.key];
             if (selectedIndex === null) arr.push(rec); else arr[selectedIndex] = rec;
-            saveState();
-            renderSection(sec);
-            showModal('Success', 'Record saved successfully.');
+            
+            try {
+                await saveState();
+                renderSection(sec);
+                showModal('Success', 'Record saved successfully.');
+            } catch (err) {
+                // Error handled in saveState
+            }
         });
         document.getElementById('resetForm').addEventListener('click', () => { selectedIndex = null; document.getElementById('entryForm').reset(); document.getElementById('submitText').textContent='Save Entry'; });
     }
 
-    // Table
     contentArea.insertAdjacentHTML('beforeend', `
         <div class="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg overflow-hidden shadow-lg flex flex-col">
             <div class="overflow-x-auto custom-scrollbar">
@@ -966,6 +1077,10 @@ function renderTableRows(sec) {
     const q = searchInput.value.trim().toLowerCase();
     const hasStatus = sec.fields.some(f => f.k === 'status');
     
+    // 🔥 5. UID-BASED BUTTON SECURITY
+    const currentUser = auth.currentUser;
+    const isAdmin = currentUser && currentUser.uid === ADMIN_UID; 
+
     let rows = '';
     arr.forEach((row, idx) => {
         let text = Object.values(row).join(' ').toLowerCase();
@@ -974,6 +1089,12 @@ function renderTableRows(sec) {
             if (filterStatus === 'Rejected' && !['Rejected', 'Objection'].includes(row.status)) return;
             if (filterStatus !== 'Rejected' && row.status !== filterStatus) return;
         }
+
+        // Hide buttons for non-admins using JS
+        const actionButtons = isAdmin ? `
+            <button class="text-blue-400 hover:text-white mr-2" onclick="editRow('${sec.key}', ${idx})"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+            <button class="text-red-500 hover:text-white" onclick="deleteRow('${sec.key}', ${idx})"><i data-lucide="trash" class="w-4 h-4"></i></button>
+        ` : `<span class="text-xs text-gray-500 italic">Read Only</span>`;
 
         rows += `
             <tr class="border-b border-[var(--border-color)] hover:bg-[var(--hover-bg)] transition-colors group ${idx === selectedIndex ? 'bg-blue-900 bg-opacity-20' : ''}">
@@ -985,8 +1106,7 @@ function renderTableRows(sec) {
                     return `<td class="p-3 text-sm whitespace-nowrap max-w-[150px] overflow-hidden text-ellipsis" title="${val}">${val}</td>`;
                 }).join('')}
                 <td class="p-3 text-right whitespace-nowrap">
-                    <button class="text-blue-400 hover:text-white mr-2" onclick="editRow('${sec.key}', ${idx})"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                    <button class="text-red-500 hover:text-white" onclick="deleteRow('${sec.key}', ${idx})"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    ${actionButtons}
                 </td>
             </tr>
         `;
@@ -996,6 +1116,12 @@ function renderTableRows(sec) {
 }
 
 window.editRow = (key, idx) => {
+    // 🔹 Security: Double check permissions
+    if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+        showModal('Access Denied', 'You do not have permission to edit.');
+        return;
+    }
+
     selectedIndex = idx;
     const rec = state[key][idx];
     const sec = getCurrentSec();
@@ -1011,10 +1137,21 @@ window.editRow = (key, idx) => {
 };
 
 window.deleteRow = (key, idx) => {
-    if(confirm('Delete this entry?')) {
+    // 🔹 Security: Double check permissions
+    if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+        showModal('Access Denied', 'You do not have permission to delete.');
+        return;
+    }
+
+    // 🔥 4. DELETE CONFIRMATION STRONG
+    const confirmation = prompt("⚠️ CRITICAL ACTION REQURIED\n\nTo permanently delete this record, type 'DELETE' below:");
+    
+    if(confirmation === 'DELETE') {
         state[key].splice(idx, 1);
-        saveState();
+        saveState(); // Error handling inside
         renderContent();
+    } else {
+        if(confirmation !== null) alert("Deletion cancelled. You must type 'DELETE' exactly.");
     }
 };
 
@@ -1079,15 +1216,83 @@ function performCrossTabSearch(query) {
 }
 
 /* ---------- Export / Import / Settings ---------- */
+
+// 🔥 NEW FUNCTION: EXPORT CURRENT TAB DATA
+async function exportCurrentTabXlsx() {
+    // Security check
+    if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
+        showModal('Access Denied', 'Data export restricted to Admin.');
+        return;
+    }
+    
+    try {
+        const sec = getCurrentSec();
+        if (!sec || !sec.key) {
+            showModal('Export Error', 'Cannot export data from this page.');
+            return;
+        }
+
+        const wb = XLSX.utils.book_new();
+        const dateStr = todayISO();
+        const arr = state[sec.key] || [];
+        
+        // Prepare Data for Sheet
+        const headers = sec.fields.map(f => f.label);
+        const dataRows = arr.map(r => sec.fields.map(f => r[f.k]));
+
+        // Add Header Row with Date at Top
+        const sheetData = [
+            [`Export Date: ${dateStr}`], // Row 1
+            headers,                     // Row 2 (Headers)
+            ...dataRows                  // Rows 3+ (Data)
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+        
+        // Determine Sheet Name (max 31 chars) and File Name based on rules
+        let sheetName = sec.title;
+        let fileName = sec.title;
+
+        if (sec.key === 'welfare_wmc_medical') {
+            // EXTRA RULE for WMC Medical Financial Assistance
+            sheetName = "Medical Financial Assistance in WMC";
+            fileName = "Medical Financial Assistance in WMC";
+        }
+
+        // Safe Sheet Name (limit to 31 chars)
+        let safeSheetName = sheetName.replace(/[\\/?*[\]]/g, "").substring(0, 31);
+        
+        XLSX.utils.book_append_sheet(wb, ws, safeSheetName);
+
+        // File name format: TabName_YYYY-MM-DD.xlsx
+        XLSX.writeFile(wb, `${fileName}_${dateStr}.xlsx`);
+        
+        showModal('Export Complete', `${sec.title} data exported successfully!`);
+        
+    } catch (e) {
+        console.error("Individual Export Error:", e);
+        showModal('Export Failed', 'An error occurred while creating the Excel file.');
+    }
+}
+
+
 function renderSettings() {
+    // Check if user is Admin before showing sensitive buttons
+    const currentUser = auth.currentUser;
+    const isAdmin = currentUser && currentUser.uid === ADMIN_UID;
+
+    const dataActions = isAdmin ? `
+        <button onclick="downloadAllXlsx()" class="w-full mb-2 bg-green-600 text-white p-2 rounded hover:bg-green-700">Download All Data (XLSX)</button>
+        <button onclick="document.getElementById('importFile').click()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Import JSON Backup</button>
+        <input type="file" id="importFile" class="hidden" accept=".json" onchange="handleImport(this)">
+    ` : `<p class="text-sm text-yellow-500 border border-yellow-700 p-2 rounded">Data export/import restricted to Admin.</p>`;
+
     contentArea.innerHTML = `
         <h2 class="text-3xl font-semibold mb-4 text-[var(--text-primary)]">Settings</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
              <div class="bg-[var(--card-bg)] p-4 rounded border border-[var(--border-color)]">
                 <h3 class="font-bold mb-2">Data Management</h3>
-                <button onclick="downloadAllXlsx()" class="w-full mb-2 bg-green-600 text-white p-2 rounded">Download All (XLSX)</button>
-                <button onclick="document.getElementById('importFile').click()" class="w-full bg-blue-600 text-white p-2 rounded">Import JSON</button>
-                <input type="file" id="importFile" class="hidden" accept=".json" onchange="handleImport(this)">
+                ${dataActions}
              </div>
              <div class="bg-[var(--card-bg)] p-4 rounded border border-[var(--border-color)]">
                 <h3 class="font-bold mb-2">Appearance</h3>
@@ -1101,28 +1306,70 @@ function renderSettings() {
     `;
 }
 
+// 🔥 7. ADVANCED XLS EXPORT (Multi-sheet) - UNTOUCHED AS REQUESTED
 async function downloadAllXlsx() {
-    const wb = XLSX.utils.book_new();
-    getAllSectionsWithKey().forEach(sec => {
-        const arr = state[sec.key] || [];
-        const rows = [sec.fields.map(f => f.label), ...arr.map(r => sec.fields.map(f => r[f.k]))];
-        const ws = XLSX.utils.aoa_to_sheet(rows);
-        XLSX.utils.book_append_sheet(wb, ws, sec.title.substring(0,30));
-    });
-    XLSX.writeFile(wb, 'Welfare_Diary_Full.xlsx');
+    if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) return;
+
+    try {
+        const wb = XLSX.utils.book_new();
+        const dateStr = todayISO();
+        
+        getAllSectionsWithKey().forEach(sec => {
+            const arr = state[sec.key] || [];
+            
+            // Prepare Data for Sheet
+            // Headers
+            const headers = sec.fields.map(f => f.label);
+            
+            // Rows
+            const dataRows = arr.map(r => sec.fields.map(f => r[f.k]));
+
+            // Add Header Row with Date at Top
+            const sheetData = [
+                [`Report Date: ${dateStr}`], // Row 1
+                headers,                     // Row 2 (Headers)
+                ...dataRows                  // Rows 3+ (Data)
+            ];
+
+            const ws = XLSX.utils.aoa_to_sheet(sheetData);
+            
+            // 🔥 FIXED: Custom Sheet Naming for WMC Medical Tab to avoid conflict
+            let exportTitle = sec.title;
+            if (sec.key === 'welfare_wmc_medical') {
+                exportTitle = "Medical Financial Assistance in WMC";
+            }
+            
+            // Safe Sheet Name (limit to 31 chars)
+            let safeName = exportTitle.replace(/[\\/?*[\]]/g, "").substring(0, 31);
+            
+            XLSX.utils.book_append_sheet(wb, ws, safeName);
+        });
+
+        XLSX.writeFile(wb, `All_Data_${dateStr}.xlsx`);
+    } catch (e) {
+        console.error("Export Error:", e);
+        showModal('Export Failed', 'An error occurred while creating the Excel file.');
+    }
 }
 
 function handleImport(input) {
+    if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) return;
+
     const file = input.files[0];
     if(!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
-            state = JSON.parse(e.target.result);
-            saveState();
-            alert('Data imported successfully!');
-            location.reload();
-        } catch(err) { alert('Invalid JSON'); }
+            const json = JSON.parse(e.target.result);
+            if (!json || typeof json !== 'object') throw new Error("Invalid format");
+            state = json;
+            saveState(); // Will catch errors if permissions denied
+            showModal('Success', 'Data imported successfully!');
+            setTimeout(() => location.reload(), 1500);
+        } catch(err) { 
+            console.error(err);
+            showModal('Import Error', 'Invalid JSON file or corrupted data.');
+        }
     };
     reader.readAsText(file);
 }
