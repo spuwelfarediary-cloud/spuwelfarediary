@@ -997,7 +997,7 @@ function renderSection(sec) {
 
     if (!filterStatus && !q) {
         contentArea.insertAdjacentHTML('beforeend', `
-            <div class="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg p-5 shadow-lg">
+            <div class="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg p-5 shadow-lg" id="entryFormContainer">
                 <h2 class="text-xl font-bold mb-4 text-[var(--text-primary)]">${sec.title} - Entry Form</h2>
                 <form id="entryForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     ${sec.fields.map(f => `
@@ -1115,6 +1115,7 @@ function renderTableRows(sec) {
     initializeIcons();
 }
 
+// 🟢 MODIFIED EDIT FUNCTION (Tasks 1 & 2)
 window.editRow = (key, idx) => {
     // 🔹 Security: Double check permissions
     if (!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) {
@@ -1123,15 +1124,32 @@ window.editRow = (key, idx) => {
     }
 
     selectedIndex = idx;
+    
+    // 🟢 TASK 1 FIX: If we are in a Filtered View (Pending/Approved tabs),
+    // we MUST clear the filter so the Entry Form is rendered.
+    if (filterStatus !== null || isSearchMode) {
+        filterStatus = null;
+        isSearchMode = false;
+        searchInput.value = '';
+        renderContent(); // Rerender to show the form
+    }
+
     const rec = state[key][idx];
     const sec = getCurrentSec();
-    if(document.getElementById('entryForm')) {
+    
+    // Locate the form (it should be visible now)
+    const formEl = document.getElementById('entryForm');
+
+    if(formEl) {
         sec.fields.forEach(f => {
             const el = document.getElementById(f.k);
             if(el) el.value = rec[f.k] || '';
         });
         document.getElementById('submitText').textContent = 'Update Entry';
-        window.scrollTo({top:0, behavior:'smooth'});
+        
+        // 🟢 TASK 2 FIX: Smooth Scroll directly to the form
+        formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
         renderTableRows(sec);
     }
 };
